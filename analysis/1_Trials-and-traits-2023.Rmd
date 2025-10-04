@@ -2,7 +2,6 @@
 title: "Trials and Traits 2023"
 author: 
   - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Embrapa Mandioca e Fruticultura, wevertonufv@gmail.com]
-  - Oliveira, E. J.^[Eder Jorge de Oliveira, Pesquisador e Coordenador do Projeto, Embrapa Mandioca e Fruticultura]
 date: "`r Sys.Date()`"
 site: workflowr::wflow_site
 output: workflowr::wflow_html
@@ -111,7 +110,7 @@ Labels above the bars indicate the exact number of trials, and the subtitle show
 number_trials_year %>%
   ggplot() +
   geom_col(aes(x = studyYear, y = n, fill = studyYear), show.legend = F) +
-  geom_text(aes(x = studyYear, y = n + 1, label = n), size = 8, vjust = 0) +
+  geom_text(aes(x = studyYear, y = n + 1, label = n), size = 2, vjust = 0) +
   theme_bw() +
   scale_fill_grafify(palette = "kelly") +
   labs(
@@ -120,8 +119,8 @@ number_trials_year %>%
     x = "Study Year",
     y = "Number of Trials Inserted"
   ) +
-  theme(text = element_text(size = 20),
-        axis.text.x = element_text(face ="bold"))
+  theme(text = element_text(size = 10),
+        axis.text.x = element_text(face ="bold", angle = 45, hjust = 1))
 
 ggsave("output/StudyYear.tiff", width = 16, height = 8)
 ```
@@ -162,7 +161,7 @@ number_traits_year %>%
   select(where(~ n_distinct(.) > 1)) %>%
   ggplot() +
   geom_col(aes(x = studyYear, y = sum, fill = studyYear), show.legend = F) +
-  geom_text(aes(x = studyYear, y = sum, label = sum), vjust = -0.5, size = 7) +
+  geom_text(aes(x = studyYear, y = sum, label = sum), vjust = -0.5, size = 2) +
   theme_bw() +
   scale_fill_brewer(palette = "Paired") +
   labs(
@@ -171,8 +170,8 @@ number_traits_year %>%
     x = "Study Year",
     y = "Number of traits evaluated"
   ) +
-  theme(text = element_text(size = 20),
-        axis.text.x = element_text(face ="bold"))
+  theme(text = element_text(size = 10),
+        axis.text.x = element_text(face ="bold", angle = 45, hjust = 1))
 
 ggsave("output/StudyTraits.tiff", width = 16, height = 8)
 ```
