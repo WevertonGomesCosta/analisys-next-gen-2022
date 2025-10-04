@@ -1,11 +1,149 @@
 ---
 title: "Home"
+author: 
+  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Embrapa Mandioca e Fruticultura, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
 site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/analisys-next-gen-2022/
 output:
   workflowr::wflow_html:
-    toc: false
+    toc: FALSE
+highlight: github
 editor_options:
   chunk_output_type: console
+github-repo: WevertonGomesCosta/analisys-next-gen-2022
 ---
 
-Welcome to my research website.
+Bem-vindo! Este repositório reúne **código, dados e relatórios reprodutíveis** associados às análises do **Projeto NextGen Cassava (Ano 6 – 2022/2023)**, conduzidas no **programa de melhoramento de mandioca da Embrapa**.
+
+O objetivo é avaliar o **progresso genético** e a **integração de características de rendimento e qualidade** em populações GS (C0, C1, C2), utilizando **modelos mistos, BLUPs, índices de seleção e seleção genômica**.
+
+---
+
+## 🔄 Workflow Overview
+
+```{mermaid}
+flowchart TD
+    A[Input Data<br/>Phenotypes, metadata, fieldbooks] --> B[Data Cleaning<br/>Population structure (C0, C1, C2)]
+    B --> C[BLUPs & Heritability<br/>Mixed models with metan]
+    C --> D[Selection Indices<br/>Yield + Quality traits]
+    D --> E[Integration<br/>Drought tolerance, NIRS, GWAS]
+    E --> F[Results & Visualizations<br/>Genetic gain, trait distributions, clone ranking]
+```
+
+---
+
+## Contexto
+
+- **Ensaios**: mais de 240 ensaios inseridos no CassavaBase desde 2018.  
+- **Clones avaliados**: 3403 em 2022/2023 (C0, C1, C2).  
+- **Características**: 69 traits de rendimento e qualidade.  
+- **Resultados**: ganhos genéticos consistentes em rendimento, integração de qualidade e tolerância à seca.  
+
+---
+
+## Recursos Disponíveis
+
+1. **Código de Análise**: Scripts em R para pré-processamento, modelagem e visualização.  
+2. **Dados**: fenótipo, metadados e fieldbooks de ensaios.  
+3. **Relatórios**: análises reprodutíveis em RMarkdown.  
+4. **Visualizações**: gráficos de progresso genético, boxplots de BLUPs, índices de seleção e rankings de clones.  
+
+---
+
+## Como Utilizar
+
+1. Clone o repositório:  
+   ```bash
+   git clone https://github.com/WevertonGomesCosta/analisys-next-gen-2022.git
+   ```
+2. Instale as dependências em R:  
+   ```r
+   install.packages(c("tidyverse", "metan", "ggplot2", "ggpubr", "data.table", "genomicMateSelectR"))
+   ```
+3. Rode os arquivos `.Rmd` em `analysis/` para reproduzir as análises.  
+
+---
+
+## Contribuição
+
+Contribuições são bem-vindas via:  
+- *Issues* para discussão de melhorias  
+- *Pull requests* para correções  
+- Sugestões de extensões metodológicas  
+
+---
+
+## Licença
+
+Este trabalho está licenciado sob [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).  
+Para uso comercial ou modificações significativas, contate os autores.  
+
+---
+
+# English Version
+
+Welcome! This repository contains **code, data, and reproducible reports** associated with the analyses of the **NextGen Cassava Project (Year 6 – 2022/2023)**, conducted within the **cassava breeding program at Embrapa**.
+
+The goal is to evaluate **genetic progress** and **integration of yield and quality traits** in GS populations (C0, C1, C2), using **mixed models, BLUPs, selection indices, and genomic selection**.
+
+---
+
+## 🔄 Workflow Overview
+
+```{mermaid}
+flowchart TD
+    A[Input Data<br/>Phenotypes, metadata, fieldbooks] --> B[Data Cleaning<br/>Population structure (C0, C1, C2)]
+    B --> C[BLUPs & Heritability<br/>Mixed models with metan]
+    C --> D[Selection Indices<br/>Yield + Quality traits]
+    D --> E[Integration<br/>Drought tolerance, NIRS, GWAS]
+    E --> F[Results & Visualizations<br/>Genetic gain, trait distributions, clone ranking]
+```
+
+---
+
+## Context
+
+- **Trials**: more than 240 trials entered into CassavaBase since 2018.  
+- **Clones evaluated**: 3403 in 2022/2023 (C0, C1, C2).  
+- **Traits**: 69 yield and quality traits.  
+- **Results**: consistent genetic gains in yield, integration of quality, and drought tolerance.  
+
+---
+
+## Available Resources
+
+1. **Analysis Code**: R scripts for preprocessing, modeling, and visualization.  
+2. **Data**: phenotypes, metadata, and fieldbooks.  
+3. **Reports**: reproducible RMarkdown analyses.  
+4. **Visualizations**: genetic progress plots, BLUP boxplots, selection indices, and clone rankings.  
+
+---
+
+## How to Use
+
+1. Clone the repository:  
+   ```bash
+   git clone https://github.com/WevertonGomesCosta/analisys-next-gen-2022.git
+   ```
+2. Install dependencies in R:  
+   ```r
+   install.packages(c("tidyverse", "metan", "ggplot2", "ggpubr", "data.table", "genomicMateSelectR"))
+   ```
+3. Run the `.Rmd` files in `analysis/` to reproduce the analyses.  
+
+---
+
+## Contribution
+
+Contributions are welcome via:  
+- Opening issues for improvement discussions  
+- Submitting pull requests for fixes  
+- Suggesting methodological extensions  
+
+---
+
+## License
+
+This work is licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).  
+For commercial use or significant modifications, please contact the authors.  

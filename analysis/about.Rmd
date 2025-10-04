@@ -1,10 +1,107 @@
 ---
 title: "About"
+author: 
+  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Embrapa Mandioca e Fruticultura, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/analisys-next-gen-2022/
 output:
   workflowr::wflow_html:
-    toc: false
+    toc: FALSE
+highlight: github
 editor_options:
   chunk_output_type: console
+github-repo: WevertonGomesCosta/analisys-next-gen-2022
 ---
 
-Describe your project.
+# About this Project
+
+This repository documents the analyses carried out within the **NextGen Cassava Project (Year 6 – 2022/2023)**, focusing on the **cassava breeding program at Embrapa**.  
+
+The project provides a **fully reproducible workflow** implemented in **R**, covering:
+
+- **Field trial monitoring** (number of trials and traits per year)  
+- **Phenotypic data curation** and population structure (GS-C0, GS-C1, GS-C2)  
+- **BLUPs estimation** and heritability for yield and quality traits  
+- **Selection indices** integrating multiple traits  
+- **Integration with drought tolerance and quality traits** (PPD, cooking ability, amylose, starch, dry matter)  
+- **NIRS predictions** for high-throughput phenotyping  
+
+All scripts, data, and outputs are organized to ensure **transparency, reproducibility, and open science**.
+
+---
+
+# Institutional Context
+
+👉 This project is part of the activities of the **Cassava Breeding Program at Embrapa Mandioca e Fruticultura**, in collaboration with **NextGen Cassava partners** (Cornell University, IITA, NRCRI, and others).  
+
+The program aims to accelerate cassava improvement through **genomic selection, multi-environment trials, and integration of quality traits**, delivering cultivars adapted to farmers’ needs in Brazil and beyond.
+
+---
+
+# Authors
+
+**Weverton Gomes da Costa**  
+- Postdoctoral Researcher – Embrapa Cassava & Fruits  
+- [Personal Website](https://wevertongomescosta.github.io/)  
+- [LinkedIn](https://www.linkedin.com/in/wevertoncosta/)  
+- [ORCID](https://orcid.org/0000-0003-0742-5936)  
+- [Lattes](http://lattes.cnpq.br/2723811288754046)  
+- [Google Scholar](https://scholar.google.com.br/citations?hl=pt-BR&user=eJNKcHsAAAAJ)  
+- [GitHub](https://github.com/WevertonGomesCosta)  
+
+**Eder Jorge de Oliveira**  
+- Researcher and Project Coordinator – Embrapa Cassava & Fruits  
+
+---
+
+# License
+
+This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License**.  
+See the [LICENSE](license.html) file for details.
+
+---
+
+# Sobre este Projeto (PT-BR)
+
+Este repositório documenta as análises realizadas no âmbito do **Projeto NextGen Cassava (Ano 6 – 2022/2023)**, com foco no **programa de melhoramento de mandioca da Embrapa**.  
+
+O projeto disponibiliza um **workflow totalmente reprodutível** em **R**, abrangendo:
+
+- **Monitoramento de ensaios de campo** (número de ensaios e características por ano)  
+- **Curadoria de dados fenotípicos** e estruturação das populações (GS-C0, GS-C1, GS-C2)  
+- **Estimação de BLUPs** e herdabilidade para caracteres de rendimento e qualidade  
+- **Índices de seleção** integrando múltiplos caracteres  
+- **Integração com tolerância à seca e qualidade** (PPD, cozimento, amilose, amido, matéria seca)  
+- **Predições via NIRS** para fenotipagem em larga escala  
+
+---
+
+# Contexto Institucional
+
+👉 Este projeto integra as atividades do **Programa de Melhoramento de Mandioca da Embrapa Mandioca e Fruticultura**, em colaboração com os parceiros do **NextGen Cassava** (Cornell University, IITA, NRCRI e outros).  
+
+O programa busca acelerar o melhoramento da mandioca por meio da **seleção genômica, ensaios multiambiente e integração de características de qualidade**, entregando cultivares adaptadas às necessidades dos agricultores no Brasil e em outros países.
+
+---
+
+# Autores
+
+**Weverton Gomes da Costa**  
+- Pós-Doutorando – Embrapa Mandioca e Fruticultura  
+- [Site pessoal](https://wevertongomescosta.github.io/)  
+- [LinkedIn](https://www.linkedin.com/in/wevertoncosta/)  
+- [ORCID](https://orcid.org/0000-0003-0742-5936)  
+- [Lattes](http://lattes.cnpq.br/2723811288754046)  
+- [Google Scholar](https://scholar.google.com.br/citations?hl=pt-BR&user=eJNKcHsAAAAJ)  
+- [GitHub](https://github.com/WevertonGomesCosta)  
+
+**Eder Jorge de Oliveira**  
+- Pesquisador e Coordenador do Projeto – Embrapa Mandioca e Fruticultura  
+
+---
+
+# Licença
+
+Este projeto está licenciado sob a **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License**.  
+Consulte o arquivo [LICENSE](license.html) para mais detalhes.
