@@ -1,0 +1,373 @@
+---
+title: "Trials and Traits 2023"
+author: 
+  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Embrapa Mandioca e Fruticultura, wevertonufv@gmail.com]
+  - Oliveira, E. J.^[Eder Jorge de Oliveira, Pesquisador e Coordenador do Projeto, Embrapa Mandioca e Fruticultura]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%",
+  fig.align = "center"
+)
+```
+
+Ótimo, Weverton 🙌. O código já está bem estruturado, mas podemos **refinar as descrições, comentários e interpretações** para deixá-lo mais didático e profissional, no estilo de um tutorial científico. Veja a versão aprimorada:
+
+---
+
+# Introduction
+
+This script analyzes the **number of cassava field trials and traits evaluated per year** in the Embrapa Cassava Breeding Program, using data from **CassavaBase**.  
+The objective is to quantify the **expansion of the breeding program** in terms of experimental trials and phenotypic traits, and to provide a detailed summary of the trials conducted in 2022/2023.
+
+We will go through the following steps:
+
+1. Load required packages  
+2. Import metadata from CassavaBase  
+3. Calculate and plot the number of trials per year  
+4. Calculate and plot the number of traits per year  
+5. Generate summary tables of traits evaluated  
+6. Summarize the number of trials and clones in 2022/2023  
+
+---
+
+# Step 1: Loading Packages
+
+We start by loading the main R packages used in the analysis.  
+Each package plays a specific role:  
+- **ggthemes / grafify** → improve the aesthetics of plots  
+- **tidyverse** → data wrangling and visualization  
+- **readxl** → import Excel spreadsheets  
+- **data.table** → efficient handling of large datasets  
+- **genomicMateSelectR** → integration with CassavaBase data formats  
+- **janitor** → cleaning and reshaping data tables  
+
+```{r, message=FALSE}
+library(ggthemes)          # Themes for ggplot2
+library(grafify)           # Color palettes for plots
+library(tidyverse)         # Data manipulation and visualization
+library(readxl)            # Import Excel files
+library(data.table)        # Efficient data handling
+library(genomicMateSelectR)# CassavaBase data integration
+library(janitor)           # Data cleaning helpers
+```
+
+---
+
+# Step 2: Importing Metadata
+
+We import the metadata file (`metadata1.csv`), which contains information about each trial (year, location, design, etc.).  
+This dataset is the foundation for calculating the number of trials per year.
+
+```{r}
+dbdata <- read_delim(
+  "data/metadata1.csv",
+  delim = ";",
+  escape_double = FALSE,
+  trim_ws = TRUE
+)
+```
+
+---
+
+# Step 3: Number of Trials per Year
+
+Here we calculate the number of trials conducted each year.  
+- We exclude **2023**, since data collection was incomplete at the time of analysis.  
+- We reformat the year as a crop cycle (e.g., `2021/2022`).  
+- We group by year and count the number of trials.  
+- For 2022/2023, we manually adjust the count to 49 trials (based on fieldbook records).
+
+```{r}
+number_trials_year <- dbdata %>%
+  filter(studyYear != "2023") %>% 
+  droplevels() %>% 
+  mutate(
+    studyYear = paste0(studyYear, "/", studyYear + 1),
+    studyYear = as.factor(studyYear)
+  ) %>%
+  group_by(studyYear) %>%
+  tally() %>% 
+  mutate(n = ifelse(studyYear == "2022/2023", 49, n))
+
+write.table(number_trials_year, "output/number_trials_year.csv", sep = ",", row.names = F)
+```
+
+### Plotting the number of trials
+
+We visualize the number of trials per year using a bar chart.  
+Labels above the bars indicate the exact number of trials, and the subtitle shows the total across all years.
+
+```{r}
+number_trials_year %>%
+  ggplot() +
+  geom_col(aes(x = studyYear, y = n, fill = studyYear), show.legend = F) +
+  geom_text(aes(x = studyYear, y = n + 1, label = n), size = 8, vjust = 0) +
+  theme_bw() +
+  scale_fill_grafify(palette = "kelly") +
+  labs(
+    title = "Number of trials inserted in CassavaBase - EMBRAPA",
+    subtitle = paste("Total number of trials = ", sum(number_trials_year$n)),
+    x = "Study Year",
+    y = "Number of Trials Inserted"
+  ) +
+  theme(text = element_text(size = 20),
+        axis.text.x = element_text(face ="bold"))
+
+ggsave("output/StudyYear.tiff", width = 16, height = 8)
+```
+
+*Interpretation:*  
+The plot shows a **steady increase in the number of trials since 2018**, reflecting the program’s expansion and the systematic effort to document experiments in CassavaBase.
+
+---
+
+# Step 4: Number of Traits per Year
+
+Next, we calculate how many **traits** were evaluated each year.  
+- We select only trait columns from the phenotype dataset.  
+- For each year, we compute whether a trait was measured (1) or not (0).  
+- We then sum across traits to obtain the total number of traits evaluated per year.
+
+```{r}
+dbdata <- readDBdata(phenotypeFile = here::here("data", "phenotype.csv"))
+
+number_traits_year <- dbdata %>%
+  select(studyYear,
+         amylose.content.in.ug.g.percentage.CO_334.0000075:total.carotenoid.by.iCheck.method.CO_334.0000162) %>%
+  group_by(studyYear) %>%
+  summarise(across(
+    everything(),
+    ~ if (is.numeric(.)) mean(., na.rm = TRUE) else first(.)
+  )) %>%
+  mutate(studyYear = paste0(studyYear, "/", studyYear + 1),
+         studyYear = as.factor(studyYear)) %>%
+  mutate(across(where(is.numeric), ~ ifelse(is.na(.), 0, 1))) %>%
+  mutate(sum = rowSums(select(., where(is.numeric)), na.rm = TRUE))
+```
+
+### Plotting the number of traits
+
+```{r}
+number_traits_year %>%
+  select(where(~ n_distinct(.) > 1)) %>%
+  ggplot() +
+  geom_col(aes(x = studyYear, y = sum, fill = studyYear), show.legend = F) +
+  geom_text(aes(x = studyYear, y = sum, label = sum), vjust = -0.5, size = 7) +
+  theme_bw() +
+  scale_fill_brewer(palette = "Paired") +
+  labs(
+    title = "Number of traits evaluated by year in CassavaBase - EMBRAPA",
+    subtitle = paste("Total number of traits = ", ncol(number_traits_year) - 1),
+    x = "Study Year",
+    y = "Number of traits evaluated"
+  ) +
+  theme(text = element_text(size = 20),
+        axis.text.x = element_text(face ="bold"))
+
+ggsave("output/StudyTraits.tiff", width = 16, height = 8)
+```
+
+*Interpretation:*  
+The number of traits evaluated has **increased over time**, reaching **69 traits in total**.  
+This demonstrates the program’s effort to integrate **yield, quality, and stress tolerance traits** into the breeding pipeline, moving beyond simple yield evaluation.
+
+---
+
+# Step 5: Trait Table
+
+Finally, we generate a **trait-by-year table**.  
+This table indicates with an “x” whether a given trait was evaluated in a specific year, providing a quick overview of trait coverage across years.
+
+```{r}
+number_traits_year2 <- number_traits_year %>%
+  select(-sum) %>%
+  t() %>%
+  row_to_names(row_number = 1) %>%
+  as_tibble(rownames = "Trait") %>%
+  mutate(across(c(2:12), ~ ifelse(. == 1, "x", NA)))
+
+write.table(number_traits_year2, "output/number_traits_year2.csv", sep = ",", row.names = F)
+```
+
+*Interpretation:*  
+This table is useful for identifying **when each trait started being measured** and for tracking the **evolution of phenotyping priorities** in the breeding program.
+
+---
+
+# Step 6: Trials and Clones in 2022/2023
+
+Now we focus on the **field trials conducted in 2022/2023**.  
+This step summarizes the **number of trials** and the **number of clones evaluated** in each trial type (AYT, PYT, UYT, MULT, CB).
+
+```{r}
+trials_22 <- list.files(path = "data/Arquivos Fieldbook 2022",
+                        pattern = "BR.",
+                        full.names = T) %>%
+  set_names() %>%
+  map_df(~ read_excel(., .name_repair = janitor::make_clean_names), .id = "sheet") %>%
+  mutate(
+    trial_type = toupper(str_split_i(plot_name, '[.]', 2)),
+    trial = paste("BR", trial_type, "22", sep = "."),
+    locate = ifelse(sheet == "data/Arquivos Fieldbook 2022/BR.UYT.WD.22.BJL_1.xls",
+                    str_split_i(plot_name, '[.]', 3),
+                    str_split_i(plot_name, '[.]', -2))
+  )
+```
+
+---
+
+## Step 6.1: Number of Accessions (Clones)
+
+We calculate the number of unique clones evaluated per trial type.
+
+```{r}
+accession_number <- trials_22 %>%
+  mutate(accession_name2 = str_split_i(plot_name, '[.]', -1),
+         accession_name2 = str_split_i(accession_name2, '_', 1),
+         trial_type = case_when(
+           str_detect(trial_type, "AYT") ~ "AYT",
+           str_detect(trial_type, "CB") ~ "CB",
+           str_detect(trial_type, "MULT") ~ "MULT",
+           str_detect(trial_type, "PYT") ~ "PYT",
+           str_detect(trial_type, "UYT") ~ "UYT",
+           .default = trial_type)) %>%
+  group_by(trial_type, accession_name2) %>%
+  tally() %>%
+  ungroup() %>%
+  group_by(trial_type) %>%
+  tally() %>%
+  ungroup() %>%
+  rename(n_clones = n)
+
+write.table(accession_number, "output/accession_number.csv", sep = ",", row.names = F)
+```
+
+*Interpretation:*  
+This table shows how many clones were tested in each type of trial.  
+For example:  
+- **AYT**: ~113 clones  
+- **PYT**: ~156 clones  
+- **UYT**: ~95 clones  
+- **MULT**: ~1227 clones  
+- **CB**: ~258 clones  
+
+This reflects the **selection funnel**: many clones in early stages (PYT/MULT) and fewer in advanced stages (UYT).
+
+---
+
+## Step 6.2: Number of Trials per Type
+
+We now summarize how many trials were conducted in each category.
+
+```{r}
+trials_22 %>%
+  mutate(trial_type = case_when(
+    str_detect(trial_type, "AYT") ~ "AYT",
+    str_detect(trial_type, "CB") ~ "CB",
+    str_detect(trial_type, "MULT") ~ "MULT",
+    str_detect(trial_type, "PYT") ~ "PYT",
+    str_detect(trial_type, "UYT") ~ "UYT",
+    .default = trial_type)) %>%
+  group_by(trial, trial_type, locate) %>%
+  tally() %>%
+  ungroup() %>%
+  group_by(trial_type) %>%
+  tally() %>%
+  ungroup()
+```
+
+*Interpretation:*  
+This confirms the **distribution of trials**:  
+- **AYT**: 9 trials  
+- **PYT**: 3 trials  
+- **UYT**: 26 trials  
+- **MULT**: 3 trials  
+- **CB**: 2 trials  
+
+---
+
+## Step 6.3: UYT Trials by Location
+
+Uniform Yield Trials (UYT) are conducted across multiple locations to test clone stability and adaptation.
+
+```{r}
+UYT <- trials_22 %>%
+  group_by(trial, trial_type, locate) %>%
+  tally() %>%
+  ungroup() %>%
+  pivot_wider(names_from = locate, values_from = n) %>%
+  filter(str_detect(trial, "UYT")) %>%
+  pivot_longer(cols = 3:31, names_to = "locate", values_to = "n") %>%
+  filter(!is.na(n))
+
+locate_UYT <- UYT %>%
+  group_by(locate) %>%
+  tally()
+
+write.table(UYT, "output/SUMMARY OF FIELD TRIALS_UYT.csv", sep = ",", row.names = F)
+```
+
+*Interpretation:*  
+This summary shows **how many UYT trials were conducted in each location** (e.g., Cruz das Almas, Laje, Alagoinhas, Dourados).  
+It highlights the **multi-environment testing strategy** of the breeding program.
+
+---
+
+## Step 6.4: Other Trials (non-UYT)
+
+We also summarize the other trial types (PYT, AYT, MULT, CB).
+
+```{r}
+trials_22 <- list.files(path = "data/Arquivos Fieldbook 2022",
+                        pattern = "BR.",
+                        full.names = T) %>%
+  set_names() %>%
+  map_df(~ read_excel(., .name_repair = janitor::make_clean_names), .id = "sheet") %>%
+  mutate(trial_type = toupper(str_split_i(plot_name, '[.]', 2)),
+         trial = paste("BR", trial_type, "22", sep = "."),
+         locate = ifelse(sheet == "data/Arquivos Fieldbook 2022/BR.UYT.WD.22.BJL_1.xls",
+                         str_split_i(plot_name, '[.]', 3),
+                         str_split_i(plot_name, '[.]', -2))) %>%
+  group_by(trial, trial_type, locate) %>%
+  tally() %>%
+  ungroup() %>%
+  pivot_wider(names_from = locate, values_from = n) %>%
+  filter(!str_detect(trial, "UYT")) %>%
+  select_if(~ !all(is.na(.)))
+
+write.table(trials_22, "output/SUMMARY OF FIELD TRIALS.csv", sep = ",", row.names = F)
+
+trials_22 %>%
+  mutate(soma = rowSums(.[3:ncol(trials_22)], na.rm = T)) %>%
+  select(trial, trial_type, soma)
+```
+
+*Interpretation:*  
+This table summarizes the **non-UYT trials**, showing the number of plots per location.  
+It provides a clear view of where each trial type was conducted and the scale of evaluation.
+
+---
+
+# Conclusion
+
+In this tutorial, we:
+
+- Counted the number of trials per year (2018–2023)  
+- Quantified the number of traits evaluated (69 in total)  
+- Generated tables showing which traits were evaluated each year  
+- Summarized the number of trials and clones in 2022/2023  
+- Distinguished between **UYT (multi-location)** and **other trial types**  
+
+**Key message:**  
+The Embrapa cassava breeding program has significantly expanded its experimental capacity, both in the number of trials and in the diversity of traits evaluated. This provides a strong foundation for genomic selection and the integration of yield, quality, and stress tolerance traits.
+

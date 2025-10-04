@@ -1,0 +1,492 @@
+---
+title: "Blups cycles"
+author: 
+  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Embrapa Mandioca e Fruticultura, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+# Carregar pacotes
+
+```{r}
+library(data.table)
+library(metan)
+library(tidyverse)
+library(foreach)
+library(doParallel)
+library(ggthemes)
+library(ggpubr)
+library(ggpmisc)
+library(tidytext)
+```
+
+# Carregar dados iniciais
+
+```{r}
+phenosPod <-
+  readxl::read_excel("data/Dados_podridao_2018_2021.xlsx", na = "NA")
+
+dbdata <- readRDS(here::here("data", "phenotypes_cleaned.rds")) %>%
+  left_join(phenosPod, by = "observationUnitName") %>%
+  filter(!is.na(studyYear))
+```
+
+# Definir efeitos e traits
+
+```{r}
+efeitos <- c("germplasmName",
+             "yearInLoc",
+             "blockInTrial",
+             "studyYear",
+             "trialInLocYr",
+             "studyName",
+             "Podridao",
+             "Pop",
+             "entryType")
+
+traits <- c("DMCg", "DRY", "PA", "StC", "FRW", "FSW")
+```
+
+# Selecionar dados relevantes
+
+```{r}
+trialInLocYr <- dbdata %>%
+  group_by(trialInLocYr) %>%
+  select(all_of(efeitos),
+         all_of(traits))
+
+trialInLocYr_Pop_top <- dbdata %>%
+  group_by(trialInLocYr, Pop) %>%
+  tally() %>%
+  filter(!is.na(Pop)) %>%
+  top_n(1, n) %>%
+  filter(str_detect(trialInLocYr, "UYT|AYT|PYT")) %>%
+  filter(!(str_detect(trialInLocYr, "PYT") & Pop == "C1")) %>%
+  rename(Population = Pop)
+
+podridao <- trialInLocYr %>%
+  summarise_if(is.numeric, ~ mean(.x, na.rm = TRUE)) %>%
+  filter(Podridao >= 0.5)
+
+dbdata <- dbdata %>%
+  select(all_of(efeitos),
+         all_of(traits)) %>%
+  filter(studyYear >= 2019 &
+           !(trialInLocYr %in% podridao$trialInLocYr)) %>%
+  full_join(trialInLocYr_Pop_top)
+```
+
+# Selecionar checks
+
+```{r}
+checks <- dbdata %>%
+  filter(entryType == "check") %>%
+  group_by(Pop, germplasmName) %>%
+  tally() %>%
+  filter(n >= 100) %>%
+  droplevels()
+
+checks <- c("BRS-NovoHorizonte",
+            "BGM-2017",
+            "BRS-Mulatinha",
+            "BGM-2095",
+            "BGM-2151")
+```
+
+# By trial
+
+## Função de análise de metan
+
+```{r}
+analise_metan <- function(model, trait, trial) {
+  H2 <- get_model_data(model, "genpar") %>%
+    filter(Parameters == "H2") %>%
+    pull(trait)
+  
+  BLUPS <- get_model_data(model, "ranef")$GEN
+  
+  Predicted_values <- predict(model) %>%
+    group_by(GEN) %>%
+    summarise(across(where(is.numeric), mean)) %>%
+    pull(trait)
+  
+  return(
+    tibble(
+      trialInLocYr = trial,
+      trait = trait,
+      H2 = H2,
+      germplasmName = BLUPS[[1]],
+      BLUPS = BLUPS[[2]],
+      Predicted = Predicted_values
+    )
+  )
+}
+```
+
+## Obtenção dos BLUPs
+
+```{r}
+# Definir número de núcleos a serem usados
+num_cores <- detectCores()
+
+# Registrar os núcleos a serem usados
+registerDoParallel(cores = num_cores)
+
+# Loop externo
+BLUPS <-
+  foreach(trait = traits,
+          .combine = bind_rows,
+          .multicombine = TRUE) %dopar% {
+            library(tidyverse)
+            library(metan)
+            DRG <- list()
+            
+            # Loop interno
+            for (l in unique(dbdata$trialInLocYr)) {
+              data <- dbdata %>%
+                filter(trialInLocYr == l) %>%
+                droplevels()
+              
+              if (!is.na(mean(data[[trait]], na.rm = TRUE))) {
+                model <- gamem(data,
+                               gen = germplasmName,
+                               rep = blockInTrial,
+                               resp = sym(trait))
+                
+                drg <- list(analise_metan(model, trait, l))
+                DRG <- append(DRG, drg)
+              }
+            }
+            
+            # Juntar os data frames de BLUPs de cada trait em um só
+            bind_rows(DRG)
+          }
+
+# Finalizar o registro dos núcleos
+registerDoSEQ()
+```
+
+## Adcionando a variavel Pop
+
+```{r}
+C0 <- fread("data/TP-BR-18-EMBRAPA-Nextgen.csv",
+            sep = ";",
+            na.strings = "") %>%
+      filter(!tissue_id %in% read.table("exclud_c0.csv")[[1]])
+
+BLUPS1 <- BLUPS1 %>%
+  mutate(Pop = as.factor(
+    case_when(
+      germplasmName %like% "BR-20GS-" |
+      germplasmName %like% "BR-19GS-" ~ "C2",
+      germplasmName %like% "BR-18GS-"  ~ "C1",
+      germplasmName %in% C0$tissue_id  ~ "C0"
+    )
+  ),
+  )
+
+BLUPS1  <- BLUPS1 %>%
+  mutate(
+    entryType = ifelse(germplasmName %in% checks, "check", "test"))
+
+save(BLUPS1, file = "output/BLUPS_metan.RData")
+```
+
+## Regression
+
+```{r}
+load("output/BLUPS_metan.RData")
+traits <- levels(as.factor(BLUPS1$trait))
+resultado <- NULL
+
+for (i in traits) {
+  test <- BLUPS1  %>%
+    filter(trait == i & !is.na(Pop) & H2 >= 0.5) %>%
+    aov(formula = Predicted ~ as.numeric(Pop))
+  
+  pvalue <- round(anova(test)[[1, 5]], 4)
+  
+  resultado <- c(resultado, 
+                 paste0(i,": ",round(coef(test)[[2]], 4)," (p",
+                        ifelse(pvalue < 0.001, "<0.001", 
+                               paste0("=", pvalue)),")"))
+  
+}
+
+names(resultado) <- traits
+
+BLUPS1  %>%
+  filter(!is.na(Pop) & H2 >= 0.5) %>%
+  ggplot(aes(x = as.numeric(Pop), y = Predicted)) +
+  geom_point() +
+  stat_poly_line() +
+  facet_wrap(
+    ~ trait,
+    ncol = 3,
+    scales = "free_y",
+    labeller = as_labeller(resultado)
+  ) +
+  theme_bw() +
+  theme(
+    text = element_text(size = 25, face = "bold"),
+    strip.background = element_blank(),
+    strip.placement = "outside"
+  ) +
+  scale_color_gdocs() +
+  scale_x_continuous(breaks = 1:3, labels = c("C0", "C1", "C2")) +
+  labs(x = "Population",
+       y = "")
+
+ggsave(
+  "output/regres-cycles_BLUPs.tiff",
+  dpi = 600,
+  width = 16,
+  height = 8
+)
+```
+
+## Boxplot
+
+```{r}
+mean_predicted<-BLUPS1  %>%
+  full_join(trialInLocYr_Pop_top) %>%
+  filter(!is.na(Population) & H2 >= 0.5) %>%
+  mutate(entryType = ifelse(germplasmName %in% checks, "check", "test")) %>%
+  droplevels() |> 
+  group_by(trait, Population, entryType) |> 
+  summarise(mean_predicted = mean(Predicted))
+```
+
+
+```{r}
+BLUPS1  %>%
+  full_join(trialInLocYr_Pop_top) %>%
+  filter(!is.na(Population) & H2 >= 0.5) %>%
+  mutate(entryType = ifelse(germplasmName %in% checks, "check", "test")) %>%
+  droplevels() %>%
+  ggboxplot(x = "Population", y = "Predicted", fill = "entryType") +
+  facet_wrap(trait ~ ., scales = "free_y", strip.position = "left") +
+  scale_fill_gdocs() +
+  theme_bw() +
+  theme(
+    text = element_text(size = 25, face = "bold"),
+    strip.background = element_blank(),
+    strip.placement = "outside"
+  ) +
+  labs(x = "Population",
+       y = "",
+       fill = "Entry Type")
+
+ggsave(
+  "output/boxplot-cycles_BLUPs.tiff",
+  dpi = 600,
+  width = 16,
+  height = 8
+)
+```
+
+# Joint analysis
+
+```{r}
+analise_metan_joint <- function(model, trait) {
+  H2 <- get_model_data(model, "genpar") %>%
+    filter(Parameters == "Heritability") %>%
+    pull(trait)
+  
+  BLUPS <- get_model_data(model, "ranef")$GEN
+  
+  Predicted_values <- predict(model) %>%
+    group_by(GEN) %>%
+    summarise(across(where(is.numeric), mean)) %>%
+    pull(trait)
+  
+  return(
+    tibble(
+      trait = trait,
+      H2 = H2,
+      germplasmName = BLUPS[[1]],
+      BLUPS = BLUPS[[2]],
+      Predicted = Predicted_values
+    )
+  )
+}
+```
+
+## Obtenção dos BLUPs
+
+```{r}
+# Definir número de núcleos a serem usados
+num_cores <- detectCores()
+
+# Registrar os núcleos a serem usados
+registerDoParallel(cores = num_cores)
+
+# Loop externo
+BLUPS_join <-
+  foreach(
+    trait = traits,
+    .combine = bind_rows,
+    .multicombine = TRUE,
+    .verbose = TRUE
+  ) %dopar% {
+    library(tidyverse)
+    library(metan)
+    DRG <- list()
+    
+    data <- dbdata %>%
+      select(1:6, trait, 16) %>%
+      na.omit() %>%
+      droplevels()
+    
+    if (!is.na(mean(data[[trait]], na.rm = TRUE))) {
+      model <-
+        gamem_met(
+          data,
+          env = trialInLocYr,
+          gen = germplasmName,
+          rep = blockInTrial,
+          resp = sym(trait)
+        )
+      drg <- list(analise_metan_joint(model, trait))
+      DRG <- append(DRG, drg)
+    }
+    
+    # Juntar os data frames de BLUPs de cada trait em um só
+    bind_rows(DRG)
+  }
+
+# Finalizar o registro dos núcleos
+registerDoSEQ()
+```
+
+## Adicionando a variavel Pop
+
+```{r}
+C0 <- fread("data/TP-BR-18-EMBRAPA-Nextgen.csv",
+            sep = ";",
+            na.strings = "") %>%
+      filter(!tissue_id %in% read.table("exclud_c0.csv")[[1]])
+
+BLUPS_join1 <- BLUPS_join %>%
+  mutate(Pop = as.factor(
+    case_when(
+      germplasmName %like% "BR-20GS-" |
+      germplasmName %like% "BR-19GS-" ~ "C2",
+      germplasmName %like% "BR-18GS-" |
+      germplasmName %like% "BR-18-040.40" ~ "C1",
+      germplasmName %in% C0$tissue_id  ~ "C0"
+    )
+  ))
+
+save(BLUPS_join1, file = "output/BLUPS_metan_join.RData")
+```
+
+## Calcular SI
+
+```{r}
+load("output/BLUPS_metan_join.RData")
+
+# Calcular SI
+BLUPS_join1 <- BLUPS_join %>%
+  select(-H2,-BLUPS) %>%
+  pivot_wider(names_from = trait, values_from = Predicted) %>%
+  mutate(
+    SI = 5 * coalesce(DMCg, 0) +
+      8 * (coalesce(PA, 0) + coalesce(FSW, 0)) +
+      10 * (coalesce(StC, 0) + coalesce(FRW, 0) + coalesce(DRY, 0)),
+    entryType = if_else(germplasmName %in% checks, "check", "test"),
+    germplasmName = reorder(germplasmName, desc(SI))
+  )
+```
+
+## Gráfico de Barras C1
+
+```{r}
+# Plot
+load("output/BLUPS_metan_join.RData")
+
+BLUPS_join %>% 
+  mutate(entryType = if_else(germplasmName %in% checks$Clones, "check", "test")) %>% 
+  filter(Pop == "C1" | entryType == "check") %>%
+  droplevels() %>% 
+  group_by(germplasmName) %>%
+  arrange(desc(SI)) %>%
+  ungroup() %>%
+  slice(1:30) %>%
+  ggplot(aes(x = germplasmName, y = SI, fill = entryType)) +
+  geom_col(width = 0.75, alpha = 0.9, show.legend = F) +
+  scale_fill_gdocs() +
+  theme_minimal() +
+  scale_x_reordered() +
+  theme(text = element_text(size = 25, face = "bold"),
+    axis.text.x = element_text(
+      size = 18,
+      angle = 45,
+      hjust = 1,
+      vjust = 1.1
+    ),
+    legend.title = element_blank(),
+    legend.position = "bottom",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.spacing.x = unit(0.2, "lines"),
+    strip.background = element_blank(),
+    strip.text.x = element_text(size = 12, face = "bold")
+  ) +
+  labs(x = "Clone",
+       y = "Selection Index",
+       fill = "Entry Type",
+       title = "GS-C1")
+
+ggsave(
+  "output/barras-cycles_BLUPs_C1.tiff",
+  width = 16,
+  height = 8
+)
+```
+
+
+```{r}
+# Plot
+BLUPS_join  %>% 
+  mutate(entryType = if_else(germplasmName %in% checks$Clones, "check", "test"))%>%
+  filter(Pop == "C2" | entryType == "check") %>%
+  droplevels() %>% 
+  group_by(germplasmName) %>%
+  arrange(desc(SI)) %>%
+  ungroup() %>%
+  slice(1:30) %>%
+  ggplot(aes(x = germplasmName, y = SI, fill = entryType)) +
+  geom_col(width = 0.75, alpha = 0.9, show.legend = F) +
+  scale_fill_gdocs() +
+  theme_minimal() +
+  scale_x_reordered() +
+  theme(text = element_text(size = 25, face = "bold"),
+    axis.text.x = element_text(
+      size = 18,
+      angle = 45,
+      hjust = 1,
+      vjust = 1.1
+    ),
+    legend.title = element_blank(),
+    legend.position = "bottom",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.spacing.x = unit(0.2, "lines"),
+    strip.background = element_blank(),
+    strip.text.x = element_text(size = 12, face = "bold")
+  ) +
+  labs(x = "Clone",
+       y = "Selection Index",
+       fill = "Entry Type",
+       title = "GS-C2")
+
+ggsave(
+  "output/barras-cycles_BLUPs_C2.tiff",
+  width = 16,
+  height = 8
+)
+```

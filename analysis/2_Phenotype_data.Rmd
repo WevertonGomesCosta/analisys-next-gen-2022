@@ -1,0 +1,357 @@
+---
+title: "Phenotype Data"
+author: 
+  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Embrapa Mandioca e Fruticultura, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+```{r}
+library(gt)
+library(tidyverse)
+library(readxl)
+library(data.table)
+library(genomicMateSelectR)
+```
+
+Created C0 population
+
+```{r}
+exclud_c0 <-
+  c(
+    "BGM-0830-TVER",
+    "BGM-0611",
+    "BGM-06111",
+    "BGM-0022 T.Bco",
+    "BGM-0022 T.Rx",
+    "BGM-0113 RcxCr",
+    "BGM-0113 RcxRos",
+    "BGM-0115 TB",
+    "BGM-0115 TR",
+    "BGM-0150A",
+    "BGM-0152A",
+    "BGM-0152-B",
+    "BGM-0780(B)",
+    "BGM-0780(E)",
+    "BGM-0830",
+    "BGM-0830 TB",
+    "BGM-0856 CCr",
+    "BGM-0856 CRx",
+    "BGM-1176(M)",
+    "BGM-1262C",
+    "BGM-1262E",
+    "BGM-1502(M)",
+    "BGM-1722(D)",
+    "BGM-1759(B)",
+    "BGM-0150-B",
+    "BGM-0082",
+    "BGM-0165",
+    "BGM-0177",
+    "Manzhitil",
+    "BGM-0271",
+    "BGM-0276",
+    "BGM-0312",
+    "BGM-0365",
+    "BGM-0890",
+    "BGM-0927",
+    "BGM-0931",
+    "BGM-1186",
+    "BGM-1212",
+    "BGM-1218",
+    "BGM-1490",
+    "BGM-0053",
+    "BGM-0307",
+    "BGM-0669",
+    "BGM-1376",
+    "BGM-0082?",
+    "BGM-0271?",
+    "BGM-0276?",
+    "BGM-0290?",
+    "BGM-0365?",
+    "BGM-0655.1?",
+    "BGM-0737?",
+    "BGM-0869?",
+    "BGM-0895?",
+    "BGM-1028?",
+    "BGM-1212?",
+    "BGM-0043?",
+    "BGM-0144?",
+    "BGM-0165.1?",
+    "BGM-0165.2?",
+    "BGM-0182?",
+    "BGM-0187?",
+    "BGM-0533?",
+    "BGM-0713?",
+    "BGM-0890?",
+    "BGM-0931?",
+    "BGM-1218?",
+    "BGM-1359?",
+    "Manzhitil?",
+    "SE-9",
+    "SE-1",
+    "SE-2",
+    "SE-3",
+    "SE-8",
+    "BGM-0655.2?",
+    "BGM-0077?",
+    "BGM-0929?",
+    "BGM-1025?",
+    "BGM-1360?",
+    "BGM-1511?",
+    "BLANK__G12"
+  )
+
+`%!in%` <- negate(`%in%`)
+
+C0 <- read_delim(
+  "data/TP-BR-18-EMBRAPA-Nextgen.csv",
+  delim = ";",
+  escape_double = FALSE,
+  trim_ws = TRUE
+) %>%
+  filter(tissue_id %!in% exclud_c0)
+```
+
+Data included phenotype and metadata from cassava base
+
+```{r}
+dbdata <-
+  readDBdata(
+    phenotypeFile = here::here("data", "phenotype (1).csv"),
+    metadataFile = here::here("data", "metadata (1).csv")
+  ) %>%
+  dplyr::rename(
+    FSW = fresh.shoot.weight.measurement.in.kg.per.plot.CO_334.0000016,
+    FRW = fresh.storage.root.weight.per.plot.CO_334.0000012,
+    DMCg = dry.matter.content.by.specific.gravity.method.CO_334.0000160,
+    DMCo = dry.matter.content.percentage.CO_334.0000092,
+    NOHAV = plant.stands.harvested.counting.CO_334.0000010,
+    StC = starch.content.percentage.CO_334.0000071,
+    PA = plant.architecture.visual.rating.1.5.CO_334.0000099,
+    DRY = dry.yield.CO_334.0000014
+  ) %>%
+  mutate(
+    Pop = case_when(
+      germplasmName %like% "BR-20GS-" |
+        germplasmSynonyms %like% "BR-20GS-" |
+        germplasmName %like% "BR-19GS-" |
+        germplasmSynonyms %like% "BR-19GS-" ~ "C2",
+      germplasmName %like% "BR-18GS-" |
+        germplasmSynonyms %like% "BR-18GS-" ~ "C1",
+      germplasmName %in% C0$tissue_id |
+        germplasmSynonyms %in% C0$tissue_id ~ "C0"
+    )
+  ) %>%
+  mutate_if(is.character, as.factor) %>% 
+  select(-numberBlocks, -numberReps)
+```
+
+
+```{r}
+clone_pop <- dbdata %>% 
+  group_by(Pop, germplasmName) %>% 
+  tally() %>% 
+  select(Pop, germplasmName)
+
+clone_pop %>% 
+  group_by(Pop) %>% 
+  tally()
+
+clone_pop %>% 
+  group_by(germplasmName) %>% 
+  tally()
+
+write.table(clone_pop, "clone_pop.csv", sep=",", row.names = F)
+```
+
+
+## Count numbers of Blocks, Reps, check	and test
+
+```{r}
+numberBlocks <- dbdata %>% 
+  group_by(studyName, blockNumber) %>% 
+  tally() %>% 
+  tally() %>% 
+  dplyr::rename(numberBlocks = n)
+
+numberReps <- dbdata %>% 
+  group_by(studyName, replicate) %>% 
+  tally() %>% 
+  tally() %>% 
+  dplyr::rename(numberReps = n) 
+  
+dbdata <- dbdata %>% 
+  full_join(numberBlocks) %>% 
+  full_join(numberReps)
+```
+
+```{r}
+dbdata %>% dplyr::count(observationLevel)
+dbdata %>%
+  dplyr::count(studyName,
+               trialType,
+               studyDesign,
+               numberBlocks,
+               numberReps,
+               entryType) %>%
+  spread(entryType, n) %>%
+  gt()  %>%
+  tab_options(table.font.size = pct(75))
+```
+
+
+Filter BR.PTBAGRec.19.Candeal, there are only 1 rep and 1 block.
+
+```{r}
+dbdata	<- dbdata %>% 
+  filter(studyName != "BR.PTBAGRec.19.Candeal") %>% 
+  droplevels()
+```
+
+## check if the replicate and blockNumber columns reliably distinguish complete and incomplete blocks in the data.
+
+```{r}
+dbdata %>%
+  group_by(studyName) %>%
+  dplyr::summarize(N_replicate = length(unique(replicate)),
+                   N_blockNumber = length(unique(blockNumber))) %>%
+  gt() %>% tab_options(table.font.size = pct(75))
+```
+
+## The question is, are complete replications of the experiment indicated by replicate and incomplete sub-blocks represented by blockNumber
+
+```{r}
+dbdata %>%
+  group_by(studyName) %>%
+  dplyr::summarize(
+    N_replicate = length(unique(replicate)),
+    N_blockNumber = length(unique(blockNumber)),
+    doRepsEqualBlocks = all(replicate == blockNumber)
+  ) %>% 
+  gt() %>% tab_options(table.font.size = pct(75))
+```
+
+## to check that the replicate column definitely means complete blocks. If the numbers are very similar for all trials, indicating complete blocks.
+
+```{r}
+# the overall number of accessions per trial
+dbdata %>%
+  group_by(studyName) %>%
+  dplyr::summarize(N_accession = length(unique(germplasmName))) %>%
+  # the average number of accessions per replicate per trial
+  left_join(
+    dbdata %>%
+      group_by(studyName, replicate) %>%
+      dplyr::summarize(N_accession = length(unique(germplasmName))) %>%
+      group_by(studyName) %>%
+      dplyr::summarize(avgAccessionsPerReplicate = ceiling(mean(N_accession)))
+  ) %>%
+  gt() %>% tab_options(table.font.size = pct(75))
+```
+
+## One more: look at the min, mean and max number of accessions per blockNumber
+
+```{r}
+# the overall number of accessions per trial
+dbdata %>%
+  group_by(studyName) %>%
+  dplyr::summarize(N_accession = length(unique(germplasmName))) %>%
+  left_join(
+    dbdata %>%
+      group_by(studyName, replicate, blockNumber) %>%
+      dplyr::summarize(N_accession = length(unique(germplasmName))) %>% ungroup() %>%
+      group_by(studyName) %>%
+      dplyr::summarize(
+        minAccessionsPerBlock = ceiling(min(N_accession)),
+        avgAccessionsPerBlock = ceiling(mean(N_accession)),
+        maxAccessionsPerBlock = ceiling(max(N_accession))
+      )
+  ) %>%
+  gt() %>% tab_options(table.font.size = pct(75))
+```
+
+## to create explicitly nested design variables (yearInLoc, trialInLocYr, repInTrial, blockInTrial).
+
+```{r}
+dbdata %<>%
+  group_by(studyName) %>%
+  dplyr::summarize(
+    N_replicate = length(unique(replicate)),
+    N_blockNumber = length(unique(blockNumber)),
+    doRepsEqualBlocks = all(replicate == blockNumber)
+  ) %>%
+  ungroup() %>%
+  mutate(
+    CompleteBlocks = ifelse(N_replicate == 1 & N_blockNumber == 3 | N_replicate == N_blockNumber, TRUE, FALSE),
+    IncompleteBlocks = ifelse(CompleteBlocks == FALSE, TRUE, FALSE)
+  ) %>%
+  left_join(dbdata) %>%
+  mutate(
+    yearInLoc = paste0(programName, "_", locationName, "_", studyYear),
+    trialInLocYr = paste0(yearInLoc, "_", studyName),
+    repInTrial = paste0(trialInLocYr, "_", replicate),
+    blockInTrial = paste0(trialInLocYr, "_", blockNumber)
+  )
+```
+
+
+```{r}
+dbdata %>%
+  dplyr::count(studyName, CompleteBlocks, IncompleteBlocks) %>%
+  left_join(
+    dbdata %>%
+      group_by(studyName) %>%
+      dplyr::summarize(
+        nRepInTrial = length(unique(repInTrial)),
+        nblockInTrial = length(unique(blockInTrial))
+      )
+  ) %>%
+  gt() %>% tab_options(table.font.size = pct(75))
+```
+
+# QC Trait Values
+
+## Density plot by trial
+
+```{r}
+dbdata %>%
+  ggplot(., aes(x = FRW, fill = studyName)) +
+  geom_density(alpha = 0.75) +
+  guides(fill = F)
+
+dbdata %>%
+  ggplot(., aes(x = FSW, fill = studyName)) +
+  geom_density(alpha = 0.75) +
+  guides(fill = F)
+
+dbdata %>%
+  ggplot(., aes(x = DMCg, fill = studyName)) +
+  geom_density(alpha = 0.75) +
+  guides(fill = F)
+
+dbdata %>%
+  ggplot(., aes(x = DMCo, fill = studyName)) +
+  geom_density(alpha = 0.75) +
+  guides(fill = F)
+
+dbdata %>%
+  ggplot(., aes(x = StC, fill = studyName)) +
+  geom_density(alpha = 0.75) +
+  guides(fill = F)
+
+dbdata %>%
+  ggplot(., aes(x = PA, fill = studyName)) +
+  geom_density(alpha = 0.75) +
+  guides(fill = F)
+```
+
+## Save “cleaned” phenotypes
+
+```{r}
+saveRDS(dbdata,file=here::here("data","phenotypes_cleaned.rds"))
+```
