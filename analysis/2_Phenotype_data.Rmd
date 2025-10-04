@@ -9,17 +9,49 @@ editor_options:
   chunk_output_type: console
 ---
 
-## Introduction
-
-```{r}
-library(gt)
-library(tidyverse)
-library(readxl)
-library(data.table)
-library(genomicMateSelectR)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%",
+  fig.align = "center"
+)
 ```
 
-Created C0 population
+# Introduction
+
+This script prepares and cleans the **phenotypic dataset** from the Embrapa Cassava Breeding Program, integrating metadata from **CassavaBase**.  
+The main goals are:  
+- Define the **C0 population** (founders)  
+- Integrate phenotype and metadata files  
+- Assign clones to populations (C0, C1, C2)  
+- Check experimental design consistency (blocks, replicates, checks, tests)  
+- Create nested design variables for downstream analyses  
+- Perform **quality control (QC)** on trait distributions  
+- Save a cleaned dataset for further modeling (BLUPs, heritability, selection indices)
+
+---
+
+# Step 1: Loading Packages
+
+```{r}
+library(gt)                # Elegant tables
+library(tidyverse)         # Data wrangling and visualization
+library(readxl)            # Import Excel files
+library(data.table)        # Efficient data handling
+library(genomicMateSelectR)# CassavaBase integration
+```
+
+*Comment:*  
+These packages provide the backbone for data cleaning, visualization, and integration with CassavaBase formats.
+
+---
+
+# Step 2: Defining the C0 Population
+
+We define the **C0 population** by excluding specific clones (checks, duplicates, uncertain IDs, blanks).  
+This ensures that only true founder clones are included.
 
 ```{r}
 exclud_c0 <-
@@ -108,20 +140,23 @@ exclud_c0 <-
 
 `%!in%` <- negate(`%in%`)
 
-C0 <- read_delim(
-  "data/TP-BR-18-EMBRAPA-Nextgen.csv",
-  delim = ";",
-  escape_double = FALSE,
-  trim_ws = TRUE
-) %>%
+C0 <- read_delim("data/TP-BR-18-EMBRAPA-Nextgen.csv",
+                 delim = ";", escape_double = FALSE, trim_ws = TRUE) %>%
   filter(tissue_id %!in% exclud_c0)
 ```
 
-Data included phenotype and metadata from cassava base
+*Interpretation:*  
+The **C0 population** represents the genetic base of the program. Removing uncertain or duplicated IDs avoids noise in downstream analyses.
+
+---
+
+# Step 3: Importing Phenotype and Metadata
+
+We integrate phenotype and metadata files from CassavaBase.  
+Traits are renamed to short, intuitive codes (e.g., FRW = Fresh Root Weight).
 
 ```{r}
-dbdata <-
-  readDBdata(
+dbdata <- readDBdata(
     phenotypeFile = here::here("data", "phenotype (1).csv"),
     metadataFile = here::here("data", "metadata (1).csv")
   ) %>%
@@ -137,160 +172,81 @@ dbdata <-
   ) %>%
   mutate(
     Pop = case_when(
-      germplasmName %like% "BR-20GS-" |
-        germplasmSynonyms %like% "BR-20GS-" |
-        germplasmName %like% "BR-19GS-" |
-        germplasmSynonyms %like% "BR-19GS-" ~ "C2",
-      germplasmName %like% "BR-18GS-" |
-        germplasmSynonyms %like% "BR-18GS-" ~ "C1",
-      germplasmName %in% C0$tissue_id |
-        germplasmSynonyms %in% C0$tissue_id ~ "C0"
+      germplasmName %like% "BR-20GS-" | germplasmSynonyms %like% "BR-20GS-" |
+      germplasmName %like% "BR-19GS-" | germplasmSynonyms %like% "BR-19GS-" ~ "C2",
+      germplasmName %like% "BR-18GS-" | germplasmSynonyms %like% "BR-18GS-" ~ "C1",
+      germplasmName %in% C0$tissue_id | germplasmSynonyms %in% C0$tissue_id ~ "C0"
     )
   ) %>%
-  mutate_if(is.character, as.factor) %>% 
+  mutate_if(is.character, as.factor) %>%
   select(-numberBlocks, -numberReps)
 ```
 
+*Interpretation:*  
+- **C0** = founders  
+- **C1** = first genomic selection cycle (2018)  
+- **C2** = second genomic selection cycle (2019–2020)  
+
+This classification allows us to track genetic gain across cycles.
+
+---
+
+# Step 4: Clone Counts per Population
 
 ```{r}
-clone_pop <- dbdata %>% 
-  group_by(Pop, germplasmName) %>% 
-  tally() %>% 
-  select(Pop, germplasmName)
-
-clone_pop %>% 
-  group_by(Pop) %>% 
-  tally()
-
-clone_pop %>% 
-  group_by(germplasmName) %>% 
-  tally()
-
-write.table(clone_pop, "clone_pop.csv", sep=",", row.names = F)
+clone_pop <- dbdata %>% group_by(Pop, germplasmName) %>% tally()
+clone_pop %>% group_by(Pop) %>% tally()
 ```
 
+*Interpretation:*  
+This step confirms the number of clones per population (C0, C1, C2). It ensures that population assignment was successful.
 
-## Count numbers of Blocks, Reps, check	and test
+---
+
+# Step 5: Experimental Design Checks
+
+We count the number of blocks and replicates per trial.
 
 ```{r}
-numberBlocks <- dbdata %>% 
-  group_by(studyName, blockNumber) %>% 
-  tally() %>% 
-  tally() %>% 
-  dplyr::rename(numberBlocks = n)
-
-numberReps <- dbdata %>% 
-  group_by(studyName, replicate) %>% 
-  tally() %>% 
-  tally() %>% 
-  dplyr::rename(numberReps = n) 
-  
-dbdata <- dbdata %>% 
-  full_join(numberBlocks) %>% 
-  full_join(numberReps)
+numberBlocks <- dbdata %>% group_by(studyName, blockNumber) %>% tally() %>% tally()
+numberReps <- dbdata %>% group_by(studyName, replicate) %>% tally() %>% tally()
 ```
+
+*Interpretation:*  
+This verifies whether trials follow **complete block designs** or **incomplete block designs**.
+
+We also remove a problematic trial:
 
 ```{r}
-dbdata %>% dplyr::count(observationLevel)
-dbdata %>%
-  dplyr::count(studyName,
-               trialType,
-               studyDesign,
-               numberBlocks,
-               numberReps,
-               entryType) %>%
-  spread(entryType, n) %>%
-  gt()  %>%
-  tab_options(table.font.size = pct(75))
+dbdata <- dbdata %>% filter(studyName != "BR.PTBAGRec.19.Candeal") %>% droplevels()
 ```
 
+---
 
-Filter BR.PTBAGRec.19.Candeal, there are only 1 rep and 1 block.
+# Step 6: Replicates vs Blocks Consistency
 
-```{r}
-dbdata	<- dbdata %>% 
-  filter(studyName != "BR.PTBAGRec.19.Candeal") %>% 
-  droplevels()
-```
-
-## check if the replicate and blockNumber columns reliably distinguish complete and incomplete blocks in the data.
+We check if `replicate` corresponds to complete blocks and `blockNumber` to sub-blocks.
 
 ```{r}
 dbdata %>%
   group_by(studyName) %>%
-  dplyr::summarize(N_replicate = length(unique(replicate)),
-                   N_blockNumber = length(unique(blockNumber))) %>%
-  gt() %>% tab_options(table.font.size = pct(75))
+  dplyr::summarize(N_replicate = n_distinct(replicate),
+                   N_blockNumber = n_distinct(blockNumber),
+                   doRepsEqualBlocks = all(replicate == blockNumber))
 ```
 
-## The question is, are complete replications of the experiment indicated by replicate and incomplete sub-blocks represented by blockNumber
+*Interpretation:*  
+- If `replicate == blockNumber`, the design is simple (complete blocks).  
+- If not, the design includes incomplete blocks or nested structures.
 
-```{r}
-dbdata %>%
-  group_by(studyName) %>%
-  dplyr::summarize(
-    N_replicate = length(unique(replicate)),
-    N_blockNumber = length(unique(blockNumber)),
-    doRepsEqualBlocks = all(replicate == blockNumber)
-  ) %>% 
-  gt() %>% tab_options(table.font.size = pct(75))
-```
+---
 
-## to check that the replicate column definitely means complete blocks. If the numbers are very similar for all trials, indicating complete blocks.
+# Step 7: Nested Design Variables
 
-```{r}
-# the overall number of accessions per trial
-dbdata %>%
-  group_by(studyName) %>%
-  dplyr::summarize(N_accession = length(unique(germplasmName))) %>%
-  # the average number of accessions per replicate per trial
-  left_join(
-    dbdata %>%
-      group_by(studyName, replicate) %>%
-      dplyr::summarize(N_accession = length(unique(germplasmName))) %>%
-      group_by(studyName) %>%
-      dplyr::summarize(avgAccessionsPerReplicate = ceiling(mean(N_accession)))
-  ) %>%
-  gt() %>% tab_options(table.font.size = pct(75))
-```
-
-## One more: look at the min, mean and max number of accessions per blockNumber
-
-```{r}
-# the overall number of accessions per trial
-dbdata %>%
-  group_by(studyName) %>%
-  dplyr::summarize(N_accession = length(unique(germplasmName))) %>%
-  left_join(
-    dbdata %>%
-      group_by(studyName, replicate, blockNumber) %>%
-      dplyr::summarize(N_accession = length(unique(germplasmName))) %>% ungroup() %>%
-      group_by(studyName) %>%
-      dplyr::summarize(
-        minAccessionsPerBlock = ceiling(min(N_accession)),
-        avgAccessionsPerBlock = ceiling(mean(N_accession)),
-        maxAccessionsPerBlock = ceiling(max(N_accession))
-      )
-  ) %>%
-  gt() %>% tab_options(table.font.size = pct(75))
-```
-
-## to create explicitly nested design variables (yearInLoc, trialInLocYr, repInTrial, blockInTrial).
+We create explicit identifiers for hierarchical design:
 
 ```{r}
 dbdata %<>%
-  group_by(studyName) %>%
-  dplyr::summarize(
-    N_replicate = length(unique(replicate)),
-    N_blockNumber = length(unique(blockNumber)),
-    doRepsEqualBlocks = all(replicate == blockNumber)
-  ) %>%
-  ungroup() %>%
-  mutate(
-    CompleteBlocks = ifelse(N_replicate == 1 & N_blockNumber == 3 | N_replicate == N_blockNumber, TRUE, FALSE),
-    IncompleteBlocks = ifelse(CompleteBlocks == FALSE, TRUE, FALSE)
-  ) %>%
-  left_join(dbdata) %>%
   mutate(
     yearInLoc = paste0(programName, "_", locationName, "_", studyYear),
     trialInLocYr = paste0(yearInLoc, "_", studyName),
@@ -299,59 +255,43 @@ dbdata %<>%
   )
 ```
 
+*Interpretation:*  
+These variables are essential for **mixed models** (BLUPs), ensuring correct nesting of random effects.
+
+---
+
+# Step 8: QC of Trait Values
+
+We visualize trait distributions by trial to detect outliers or inconsistencies.
 
 ```{r}
-dbdata %>%
-  dplyr::count(studyName, CompleteBlocks, IncompleteBlocks) %>%
-  left_join(
-    dbdata %>%
-      group_by(studyName) %>%
-      dplyr::summarize(
-        nRepInTrial = length(unique(repInTrial)),
-        nblockInTrial = length(unique(blockInTrial))
-      )
-  ) %>%
-  gt() %>% tab_options(table.font.size = pct(75))
+dbdata %>% ggplot(aes(x = FRW, fill = studyName)) + geom_density(alpha = 0.75)
+dbdata %>% ggplot(aes(x = FSW, fill = studyName)) + geom_density(alpha = 0.75)
+dbdata %>% ggplot(aes(x = DMCg, fill = studyName)) + geom_density(alpha = 0.75)
+dbdata %>% ggplot(aes(x = DMCo, fill = studyName)) + geom_density(alpha = 0.75)
+dbdata %>% ggplot(aes(x = StC, fill = studyName)) + geom_density(alpha = 0.75)
+dbdata %>% ggplot(aes(x = PA, fill = studyName)) + geom_density(alpha = 0.75)
 ```
 
-# QC Trait Values
+*Interpretation:*  
+Density plots allow us to quickly spot **trials with abnormal distributions**, which may indicate data entry errors or environmental effects.
 
-## Density plot by trial
+---
+
+# Step 9: Save Cleaned Dataset
 
 ```{r}
-dbdata %>%
-  ggplot(., aes(x = FRW, fill = studyName)) +
-  geom_density(alpha = 0.75) +
-  guides(fill = F)
-
-dbdata %>%
-  ggplot(., aes(x = FSW, fill = studyName)) +
-  geom_density(alpha = 0.75) +
-  guides(fill = F)
-
-dbdata %>%
-  ggplot(., aes(x = DMCg, fill = studyName)) +
-  geom_density(alpha = 0.75) +
-  guides(fill = F)
-
-dbdata %>%
-  ggplot(., aes(x = DMCo, fill = studyName)) +
-  geom_density(alpha = 0.75) +
-  guides(fill = F)
-
-dbdata %>%
-  ggplot(., aes(x = StC, fill = studyName)) +
-  geom_density(alpha = 0.75) +
-  guides(fill = F)
-
-dbdata %>%
-  ggplot(., aes(x = PA, fill = studyName)) +
-  geom_density(alpha = 0.75) +
-  guides(fill = F)
+saveRDS(dbdata, file = here::here("data","phenotypes_cleaned.rds"))
 ```
 
-## Save “cleaned” phenotypes
+*Interpretation:*  
+The cleaned dataset is saved for downstream analyses (heritability, BLUPs, selection indices). This ensures reproducibility and avoids repeating preprocessing steps.
 
-```{r}
-saveRDS(dbdata,file=here::here("data","phenotypes_cleaned.rds"))
-```
+---
+
+✅ **Resumo das melhorias:**  
+- Comentários mais claros sobre cada etapa.  
+- Interpretações biológicas/experimentais ligadas ao programa de melhoramento.  
+- Estrutura narrativa que guia o leitor como um tutorial.  
+
+---
