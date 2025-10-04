@@ -540,15 +540,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaanalisysnextgen2022tree85ab19d965010c4c76e595405e2b5b4fa9d9b47ftargetblank85ab19da">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaanalisysnextgen2022treee629936b03b2928fd5f9713a995f3157fe22eb98targetblanke629936a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/tree/85ab19d965010c4c76e595405e2b5b4fa9d9b47f" target="_blank">85ab19d</a>
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/tree/e629936b03b2928fd5f9713a995f3157fe22eb98" target="_blank">e629936</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaanalisysnextgen2022tree85ab19d965010c4c76e595405e2b5b4fa9d9b47ftargetblank85ab19da"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaanalisysnextgen2022treee629936b03b2928fd5f9713a995f3157fe22eb98targetblanke629936a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -558,7 +558,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/tree/85ab19d965010c4c76e595405e2b5b4fa9d9b47f" target="_blank">85ab19d</a>.
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/tree/e629936b03b2928fd5f9713a995f3157fe22eb98" target="_blank">e629936</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -574,6 +574,7 @@ were generated:
 <pre><code>
 Ignored files:
     Ignored:    .Rproj.user/
+    Ignored:    analysis/figure/
     Ignored:    data/Arquivos Fieldbook 2022/BR.AYTInd.22.CMa_1.xls
     Ignored:    data/Arquivos Fieldbook 2022/BR.AYTInd.22.Candeal 8MP e 16cm_1.xls
     Ignored:    data/Arquivos Fieldbook 2022/BR.AYTInd.22.Estab_1.xls
@@ -616,12 +617,15 @@ Ignored files:
     Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.SDAP_1.xls
     Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.TRAC_1.xls
     Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.VC_1.xls
+    Ignored:    data/Dados_podridao_2018_2021.xlsx
+    Ignored:    data/TP-BR-18-EMBRAPA-Nextgen.csv
+    Ignored:    data/exclud_c0.csv
+    Ignored:    data/metadata (1).csv
+    Ignored:    data/metadata1.csv
+    Ignored:    data/phenotype (1).csv
     Ignored:    data/phenotype.csv
     Ignored:    output/StudyTraits.tiff
     Ignored:    output/StudyYear.tiff
-
-Untracked files:
-    Untracked:  data/exclud_c0.csv
 
 Unstaged changes:
     Modified:   analysis/3_Blups_cycles.Rmd
@@ -669,6 +673,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/blob/0775fbab6b6adb538fed82a2127fc402b32dc214/analysis/3_Blups_cycles.Rmd" target="_blank">0775fba</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-10-04
+</td>
+<td>
+add blupscycle .rmd and html
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/analisys-next-gen-2022/0775fbab6b6adb538fed82a2127fc402b32dc214/docs/3_Blups_cycles.html" target="_blank">0775fba</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-10-04
+</td>
+<td>
+add blupscycle .rmd and html
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -895,10 +933,47 @@ names(resultado) &lt;- traits</code></pre>
   geom_point() +
   stat_poly_line() +
   facet_wrap(~ trait, ncol = 3, scales = &quot;free_y&quot;, labeller = as_labeller(resultado)) +
-  theme_bw(base_size = 15) +
+  theme_bw() +
   scale_x_continuous(breaks = 1:3, labels = c(&quot;C0&quot;,&quot;C1&quot;,&quot;C2&quot;)) +
   labs(x = &quot;Population&quot;, y = &quot;&quot;)</code></pre>
 <p><img src="figure/3_Blups_cycles.Rmd/unnamed-chunk-10-1.png" width="100%" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-10-1">
+Past versions of unnamed-chunk-10-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-10-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/blob/8b7bfcd379f1c929c363c35e9bf706955e06c86c/docs/figure/3_Blups_cycles.Rmd/unnamed-chunk-10-1.png" target="_blank">8b7bfcd</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-10-04
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p><em>Interpretation:</em><br />
 Regression slopes indicate <strong>genetic gain per cycle</strong>.
 Significant positive slopes confirm progress.</p>
@@ -912,9 +987,46 @@ Significant positive slopes confirm progress.</p>
   mutate(entryType = ifelse(germplasmName %in% checks, &quot;check&quot;, &quot;test&quot;)) %&gt;%
   ggboxplot(x = &quot;Population&quot;, y = &quot;Predicted&quot;, fill = &quot;entryType&quot;) +
   facet_wrap(trait ~ ., scales = &quot;free_y&quot;, strip.position = &quot;left&quot;) +
-  theme_bw(base_size = 15) +
+  theme_bw() +
   labs(x = &quot;Population&quot;, y = &quot;&quot;, fill = &quot;Entry Type&quot;)</code></pre>
 <p><img src="figure/3_Blups_cycles.Rmd/unnamed-chunk-11-1.png" width="100%" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
+Past versions of unnamed-chunk-11-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/blob/8b7bfcd379f1c929c363c35e9bf706955e06c86c/docs/figure/3_Blups_cycles.Rmd/unnamed-chunk-11-1.png" target="_blank">8b7bfcd</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-10-04
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p><em>Interpretation:</em><br />
 Boxplots show the distribution of predicted values per cycle,
 contrasting <strong>checks vs tests</strong>. This highlights the
@@ -1107,20 +1219,56 @@ C1</strong> (mais checks), ranqueados pelo SI.</p>
   scale_fill_gdocs() +
   theme_minimal() +
   scale_x_reordered() +
-  theme(text = element_text(size = 15, face = &quot;bold&quot;),
-        axis.text.x = element_text(size = 18, angle = 45, hjust = 1, vjust = 1.1),
+  theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 1),
         legend.title = element_blank(),
         legend.position = &quot;bottom&quot;,
         panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank(),
         panel.spacing.x = unit(0.2, &quot;lines&quot;),
-        strip.background = element_blank(),
-        strip.text.x = element_text(size = 12, face = &quot;bold&quot;)) +
+        strip.background = element_blank()) +
   labs(x = &quot;Clone&quot;,
        y = &quot;Selection Index&quot;,
        fill = &quot;Entry Type&quot;,
        title = &quot;GS-C1&quot;)</code></pre>
 <p><img src="figure/3_Blups_cycles.Rmd/unnamed-chunk-16-1.png" width="100%" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-16-1">
+Past versions of unnamed-chunk-16-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-16-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/blob/8b7bfcd379f1c929c363c35e9bf706955e06c86c/docs/figure/3_Blups_cycles.Rmd/unnamed-chunk-16-1.png" target="_blank">8b7bfcd</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-10-04
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p><strong>Interpretação:</strong><br />
 - O gráfico mostra os <strong>30 clones mais promissores da
 C1</strong>.<br />
@@ -1147,20 +1295,56 @@ C2</strong>.</p>
   scale_fill_gdocs() +
   theme_minimal() +
   scale_x_reordered() +
-  theme(text = element_text(size = 15, face = &quot;bold&quot;),
-        axis.text.x = element_text(size = 18, angle = 45, hjust = 1, vjust = 1.1),
+  theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 1),
         legend.title = element_blank(),
         legend.position = &quot;bottom&quot;,
         panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank(),
         panel.spacing.x = unit(0.2, &quot;lines&quot;),
-        strip.background = element_blank(),
-        strip.text.x = element_text(size = 12, face = &quot;bold&quot;)) +
+        strip.background = element_blank()) +
   labs(x = &quot;Clone&quot;,
        y = &quot;Selection Index&quot;,
        fill = &quot;Entry Type&quot;,
        title = &quot;GS-C2&quot;)</code></pre>
 <p><img src="figure/3_Blups_cycles.Rmd/unnamed-chunk-17-1.png" width="100%" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-17-1">
+Past versions of unnamed-chunk-17-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-17-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/blob/8b7bfcd379f1c929c363c35e9bf706955e06c86c/docs/figure/3_Blups_cycles.Rmd/unnamed-chunk-17-1.png" target="_blank">8b7bfcd</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-10-04
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p><strong>Interpretação:</strong><br />
 - Os <strong>30 melhores clones da C2</strong> apresentam, em geral, SI
 mais alto que os da C1.<br />
