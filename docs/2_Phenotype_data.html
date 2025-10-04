@@ -540,15 +540,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaanalisysnextgen2022treec342e537ab9ef44c2d8accdd9448735b3b9925c2targetblankc342e53a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaanalisysnextgen2022tree0f8461a4e9acdf03fb58aafc7e2200f9f121f91atargetblank0f8461aa">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/tree/c342e537ab9ef44c2d8accdd9448735b3b9925c2" target="_blank">c342e53</a>
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/tree/0f8461a4e9acdf03fb58aafc7e2200f9f121f91a" target="_blank">0f8461a</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaanalisysnextgen2022treec342e537ab9ef44c2d8accdd9448735b3b9925c2targetblankc342e53a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaanalisysnextgen2022tree0f8461a4e9acdf03fb58aafc7e2200f9f121f91atargetblank0f8461aa"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -558,7 +558,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/tree/c342e537ab9ef44c2d8accdd9448735b3b9925c2" target="_blank">c342e53</a>.
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/tree/0f8461a4e9acdf03fb58aafc7e2200f9f121f91a" target="_blank">0f8461a</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -621,10 +621,7 @@ Ignored files:
     Ignored:    output/StudyYear.tiff
 
 Untracked files:
-    Untracked:  data/TP-BR-18-EMBRAPA-Nextgen.csv
-    Untracked:  data/metadata (1).csv
-    Untracked:  data/phenotype (1).csv
-    Untracked:  data/phenotypes_cleaned.rds
+    Untracked:  data/Dados_podridao_2018_2021.xlsx
 
 Unstaged changes:
     Modified:   analysis/2_Phenotype_data.Rmd
@@ -673,6 +670,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/blob/0c01e7bf006bc994ecfd7ca470d15478b489e38c/analysis/2_Phenotype_data.Rmd" target="_blank">0c01e7b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-10-04
+</td>
+<td>
+add phenotype_data script 2 rmd, html and site
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/analisys-next-gen-2022/0c01e7bf006bc994ecfd7ca470d15478b489e38c/docs/2_Phenotype_data.html" target="_blank">0c01e7b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-10-04
+</td>
+<td>
+add phenotype_data script 2 rmd, html and site
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -943,18 +974,240 @@ ensuring correct nesting of random effects.</p>
 <h1>Step 8: QC of Trait Values</h1>
 <p>We visualize trait distributions by trial to detect outliers or
 inconsistencies.</p>
-<pre class="r"><code>dbdata %&gt;% ggplot(aes(x = FRW, fill = studyName)) + geom_density(alpha = 0.75)</code></pre>
+<pre class="r"><code>dbdata %&gt;% ggplot(aes(x = FRW, fill = studyName)) + geom_density(alpha = 0.75, show.legend = FALSE)</code></pre>
 <p><img src="figure/2_Phenotype_data.Rmd/unnamed-chunk-9-1.png" width="100%" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>dbdata %&gt;% ggplot(aes(x = FSW, fill = studyName)) + geom_density(alpha = 0.75)</code></pre>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/blob/0c01e7bf006bc994ecfd7ca470d15478b489e38c/docs/figure/2_Phenotype_data.Rmd/unnamed-chunk-9-1.png" target="_blank">0c01e7b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-10-04
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>dbdata %&gt;% ggplot(aes(x = FSW, fill = studyName)) + geom_density(alpha = 0.75, show.legend = FALSE)</code></pre>
 <p><img src="figure/2_Phenotype_data.Rmd/unnamed-chunk-9-2.png" width="100%" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>dbdata %&gt;% ggplot(aes(x = DMCg, fill = studyName)) + geom_density(alpha = 0.75)</code></pre>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-2">
+Past versions of unnamed-chunk-9-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/blob/0c01e7bf006bc994ecfd7ca470d15478b489e38c/docs/figure/2_Phenotype_data.Rmd/unnamed-chunk-9-2.png" target="_blank">0c01e7b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-10-04
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>dbdata %&gt;% ggplot(aes(x = DMCg, fill = studyName)) + geom_density(alpha = 0.75, show.legend = FALSE)</code></pre>
 <p><img src="figure/2_Phenotype_data.Rmd/unnamed-chunk-9-3.png" width="100%" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>dbdata %&gt;% ggplot(aes(x = DMCo, fill = studyName)) + geom_density(alpha = 0.75)</code></pre>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-3">
+Past versions of unnamed-chunk-9-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/blob/0c01e7bf006bc994ecfd7ca470d15478b489e38c/docs/figure/2_Phenotype_data.Rmd/unnamed-chunk-9-3.png" target="_blank">0c01e7b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-10-04
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>dbdata %&gt;% ggplot(aes(x = DMCo, fill = studyName)) + geom_density(alpha = 0.75, show.legend = FALSE)</code></pre>
 <p><img src="figure/2_Phenotype_data.Rmd/unnamed-chunk-9-4.png" width="100%" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>dbdata %&gt;% ggplot(aes(x = StC, fill = studyName)) + geom_density(alpha = 0.75)</code></pre>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-4">
+Past versions of unnamed-chunk-9-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/blob/0c01e7bf006bc994ecfd7ca470d15478b489e38c/docs/figure/2_Phenotype_data.Rmd/unnamed-chunk-9-4.png" target="_blank">0c01e7b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-10-04
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>dbdata %&gt;% ggplot(aes(x = StC, fill = studyName)) + geom_density(alpha = 0.75, show.legend = FALSE)</code></pre>
 <p><img src="figure/2_Phenotype_data.Rmd/unnamed-chunk-9-5.png" width="100%" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>dbdata %&gt;% ggplot(aes(x = PA, fill = studyName)) + geom_density(alpha = 0.75)</code></pre>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-5">
+Past versions of unnamed-chunk-9-5.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-5" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/blob/0c01e7bf006bc994ecfd7ca470d15478b489e38c/docs/figure/2_Phenotype_data.Rmd/unnamed-chunk-9-5.png" target="_blank">0c01e7b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-10-04
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>dbdata %&gt;% ggplot(aes(x = PA, fill = studyName)) + geom_density(alpha = 0.75, show.legend = FALSE)</code></pre>
 <p><img src="figure/2_Phenotype_data.Rmd/unnamed-chunk-9-6.png" width="100%" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-6">
+Past versions of unnamed-chunk-9-6.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-6" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/blob/0c01e7bf006bc994ecfd7ca470d15478b489e38c/docs/figure/2_Phenotype_data.Rmd/unnamed-chunk-9-6.png" target="_blank">0c01e7b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-10-04
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p><em>Interpretation:</em><br />
 Density plots allow us to quickly spot <strong>trials with abnormal
 distributions</strong>, which may indicate data entry errors or
