@@ -265,12 +265,12 @@ These variables are essential for **mixed models** (BLUPs), ensuring correct nes
 We visualize trait distributions by trial to detect outliers or inconsistencies.
 
 ```{r}
-dbdata %>% ggplot(aes(x = FRW, fill = studyName)) + geom_density(alpha = 0.75)
-dbdata %>% ggplot(aes(x = FSW, fill = studyName)) + geom_density(alpha = 0.75)
-dbdata %>% ggplot(aes(x = DMCg, fill = studyName)) + geom_density(alpha = 0.75)
-dbdata %>% ggplot(aes(x = DMCo, fill = studyName)) + geom_density(alpha = 0.75)
-dbdata %>% ggplot(aes(x = StC, fill = studyName)) + geom_density(alpha = 0.75)
-dbdata %>% ggplot(aes(x = PA, fill = studyName)) + geom_density(alpha = 0.75)
+dbdata %>% ggplot(aes(x = FRW, fill = studyName)) + geom_density(alpha = 0.75, show.legend = FALSE)
+dbdata %>% ggplot(aes(x = FSW, fill = studyName)) + geom_density(alpha = 0.75, show.legend = FALSE)
+dbdata %>% ggplot(aes(x = DMCg, fill = studyName)) + geom_density(alpha = 0.75, show.legend = FALSE)
+dbdata %>% ggplot(aes(x = DMCo, fill = studyName)) + geom_density(alpha = 0.75, show.legend = FALSE)
+dbdata %>% ggplot(aes(x = StC, fill = studyName)) + geom_density(alpha = 0.75, show.legend = FALSE)
+dbdata %>% ggplot(aes(x = PA, fill = studyName)) + geom_density(alpha = 0.75, show.legend = FALSE)
 ```
 
 *Interpretation:*  
