@@ -19,10 +19,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-Excelente, Weverton 🙌. O seu script de **BLUPs por ciclos** já está muito bem estruturado, mas podemos deixá‑lo ainda mais didático, com descrições e interpretações que guiem o leitor como em um tutorial científico. Abaixo está a versão comentada e enriquecida:
-
----
-
 # Introduction
 
 This script estimates **BLUPs (Best Linear Unbiased Predictions)** for key agronomic and quality traits in cassava across different breeding cycles (C0, C1, C2).  
@@ -156,7 +152,7 @@ We then run models in parallel for efficiency.
 num_cores <- detectCores()
 registerDoParallel(cores = num_cores)
 
-BLUPS <- foreach(trait = traits, .combine = bind_rows) %dopar% {
+BLUPS <- foreach(trait = traits, .combine = bind_rows, .packages  = c("tidyverse", "metan")) %dopar% {
   DRG <- list()
   for (l in unique(dbdata$trialInLocYr)) {
     data <- dbdata %>% filter(trialInLocYr == l) %>% droplevels()
@@ -175,6 +171,42 @@ This step fits **mixed models per trial** and extracts BLUPs and H² for each tr
 
 ---
 
+## Step 6.1: Adicionar variável Pop
+
+Classificamos os clones em suas respectivas populações (C0, C1, C2), com base no nome ou código de tecido.
+
+```{r}
+C0 <- fread("data/TP-BR-18-EMBRAPA-Nextgen.csv",
+            sep = ";",
+            na.strings = "") %>%
+      filter(!tissue_id %in% read.table("data/exclud_c0.csv")[[1]])
+
+BLUPS1 <- BLUPS %>%
+  mutate(Pop = as.factor(
+    case_when(
+      germplasmName %like% "BR-20GS-" |
+      germplasmName %like% "BR-19GS-" ~ "C2",
+      germplasmName %like% "BR-18GS-"  ~ "C1",
+      germplasmName %in% C0$tissue_id  ~ "C0"
+    )
+  )) %>%
+  mutate(entryType = ifelse(germplasmName %in% checks, "check", "test"))
+
+#save(BLUPS1, file = "output/BLUPS_metan.RData")
+```
+
+*Interpretation:*
+- Each clone is assigned to its **breeding cycle**.
+- This classification is crucial for comparing genetic gains across cycles.
+
+Interpretação: Essa classificação permite comparar o desempenho genético entre ciclos de seleção.
+
+C0: população base (fundadores)
+
+C1: clones selecionados em 2018
+
+C2: clones selecionados em 2019–2020
+
 # Step 7: Regression Across Cycles
 
 We test whether predicted means increase across populations (C0 → C1 → C2).
@@ -184,7 +216,7 @@ resultado <- NULL
 for (i in traits) {
   test <- BLUPS1 %>%
     filter(trait == i & !is.na(Pop) & H2 >= 0.5) %>%
-    aov(Predicted ~ as.numeric(Pop))
+    aov(formula = Predicted ~ as.numeric(Pop))
   pvalue <- round(anova(test)[[1, 5]], 4)
   resultado <- c(resultado, paste0(i,": ",round(coef(test)[[2]], 4),
                                    " (p", ifelse(pvalue < 0.001,"<0.001",paste0("=",pvalue)),")"))
@@ -201,7 +233,7 @@ BLUPS1 %>%
   geom_point() +
   stat_poly_line() +
   facet_wrap(~ trait, ncol = 3, scales = "free_y", labeller = as_labeller(resultado)) +
-  theme_bw(base_size = 25) +
+  theme_bw(base_size = 15) +
   scale_x_continuous(breaks = 1:3, labels = c("C0","C1","C2")) +
   labs(x = "Population", y = "")
 ```
@@ -220,7 +252,7 @@ BLUPS1 %>%
   mutate(entryType = ifelse(germplasmName %in% checks, "check", "test")) %>%
   ggboxplot(x = "Population", y = "Predicted", fill = "entryType") +
   facet_wrap(trait ~ ., scales = "free_y", strip.position = "left") +
-  theme_bw(base_size = 25) +
+  theme_bw(base_size = 15) +
   labs(x = "Population", y = "", fill = "Entry Type")
 ```
 
@@ -276,10 +308,9 @@ BLUPS_join <- foreach(
   trait = traits,
   .combine = bind_rows,
   .multicombine = TRUE,
-  .verbose = TRUE
+  .verbose = TRUE,
+  .packages = c("tidyverse", "metan")
 ) %dopar% {
-  library(tidyverse)
-  library(metan)
   DRG <- list()
   
   data <- dbdata %>%
@@ -315,7 +346,7 @@ Aqui usamos o **`gamem_met`** para ajustar modelos mistos multiambiente. Isso pe
 C0 <- fread("data/TP-BR-18-EMBRAPA-Nextgen.csv",
             sep = ";",
             na.strings = "") %>%
-      filter(!tissue_id %in% read.table("exclud_c0.csv")[[1]])
+      filter(!tissue_id %in% read.table("data/exclud_c0.csv")[[1]])
 
 BLUPS_join1 <- BLUPS_join %>%
   mutate(Pop = as.factor(
@@ -328,7 +359,7 @@ BLUPS_join1 <- BLUPS_join %>%
     )
   ))
 
-save(BLUPS_join1, file = "output/BLUPS_metan_join.RData")
+#save(BLUPS_join1, file = "output/BLUPS_metan_join.RData")
 ```
 
 *Interpretação:*  
@@ -336,14 +367,17 @@ Cada clone recebe sua classificação de ciclo (**C0, C1, C2**). Isso é essenci
 
 ---
 
+Excelente, Weverton 🙌. Esse trecho já está muito bem estruturado, mas podemos deixar as descrições e interpretações ainda mais claras e didáticas, para que qualquer leitor entenda não só o que foi feito, mas também **por que** foi feito e **como interpretar os resultados**.
+
+---
+
 # Step 11: Selection Index (SI)
 
-O **Índice de Seleção (SI)** combina múltiplas características em uma única métrica ponderada, refletindo os objetivos do programa (rendimento, qualidade, arquitetura).
+O **Índice de Seleção (SI)** é uma métrica composta que integra múltiplas características em uma única pontuação ponderada.  
+Ele reflete os objetivos do programa de melhoramento, atribuindo maior peso às características de maior relevância (ex.: rendimento e qualidade de raiz).
 
 ```{r}
-load("output/BLUPS_metan_join.RData")
-
-BLUPS_join1 <- BLUPS_join %>%
+BLUPS_join1 <- BLUPS_join1 %>%
   select(-H2,-BLUPS) %>%
   pivot_wider(names_from = trait, values_from = Predicted) %>%
   mutate(
@@ -355,10 +389,95 @@ BLUPS_join1 <- BLUPS_join %>%
   )
 ```
 
-*Interpretação:*  
-- **Pesos** refletem a importância relativa de cada característica (ex.: rendimento recebe peso maior).  
-- O SI permite **ranquear clones** considerando múltiplos atributos ao mesmo tempo.  
-- Clones com SI alto são candidatos a avançar no programa.
+**Interpretação:**  
+- Os **pesos** (5, 8, 10) refletem a prioridade do programa:  
+  - **Rendimento (FRW, DRY, StC)** → peso maior (10).  
+  - **Arquitetura e biomassa aérea (PA, FSW)** → peso intermediário (8).  
+  - **Qualidade (DMCg)** → peso menor, mas ainda relevante (5).  
+- O SI permite **ranquear clones** de forma integrada, evitando decisões baseadas em apenas uma característica.  
+- Clones com SI mais alto são os **principais candidatos à seleção**.
+
+---
+
+# Step 12: Visualização dos Melhores Clones por Ciclo
+
+## Gráfico de Barras – GS-C1
+
+Aqui visualizamos os **30 melhores clones da população C1** (mais checks), ranqueados pelo SI.
+
+```{r}
+BLUPS_join1 %>% 
+  mutate(entryType = if_else(germplasmName %in% checks, "check", "test")) %>% 
+  filter(Pop == "C1" | entryType == "check") %>%
+  droplevels() %>% 
+  group_by(germplasmName) %>%
+  arrange(desc(SI)) %>%
+  ungroup() %>%
+  slice(1:30) %>%
+  ggplot(aes(x = germplasmName, y = SI, fill = entryType)) +
+  geom_col(width = 0.75, alpha = 0.9, show.legend = F) +
+  scale_fill_gdocs() +
+  theme_minimal() +
+  scale_x_reordered() +
+  theme(text = element_text(size = 15, face = "bold"),
+        axis.text.x = element_text(size = 18, angle = 45, hjust = 1, vjust = 1.1),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.spacing.x = unit(0.2, "lines"),
+        strip.background = element_blank(),
+        strip.text.x = element_text(size = 12, face = "bold")) +
+  labs(x = "Clone",
+       y = "Selection Index",
+       fill = "Entry Type",
+       title = "GS-C1")
+```
+
+**Interpretação:**  
+- O gráfico mostra os **30 clones mais promissores da C1**.  
+- A presença dos **checks** permite comparar o desempenho dos novos clones com variedades já conhecidas.  
+- Clones acima dos checks indicam **avanço genético real**.
+
+---
+
+## Gráfico de Barras – GS-C2
+
+O mesmo procedimento é feito para a **população C2**.
+
+```{r}
+BLUPS_join1 %>% 
+  mutate(entryType = if_else(germplasmName %in% checks, "check", "test")) %>%
+  filter(Pop == "C2" | entryType == "check") %>%
+  droplevels() %>% 
+  group_by(germplasmName) %>%
+  arrange(desc(SI)) %>%
+  ungroup() %>%
+  slice(1:30) %>%
+  ggplot(aes(x = germplasmName, y = SI, fill = entryType)) +
+  geom_col(width = 0.75, alpha = 0.9, show.legend = F) +
+  scale_fill_gdocs() +
+  theme_minimal() +
+  scale_x_reordered() +
+  theme(text = element_text(size = 15, face = "bold"),
+        axis.text.x = element_text(size = 18, angle = 45, hjust = 1, vjust = 1.1),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.spacing.x = unit(0.2, "lines"),
+        strip.background = element_blank(),
+        strip.text.x = element_text(size = 12, face = "bold")) +
+  labs(x = "Clone",
+       y = "Selection Index",
+       fill = "Entry Type",
+       title = "GS-C2")
+```
+
+**Interpretação:**  
+- Os **30 melhores clones da C2** apresentam, em geral, SI mais alto que os da C1.  
+- Isso confirma o **ganho genético entre ciclos**, com C2 superando C1 e os checks.  
+- O gráfico evidencia a **eficiência da seleção genômica** no programa.
 
 ---
 
@@ -368,8 +487,10 @@ Neste script, realizamos:
 - Estimativa de **BLUPs por ensaio** e **conjunta**  
 - Cálculo de **H²** para avaliar confiabilidade  
 - Comparação entre ciclos (C0 → C1 → C2) via regressão e boxplots  
-- Construção de um **Índice de Seleção** para priorizar clones superiores  
+- Construção de um **Índice de Seleção (SI)** para priorizar clones superiores  
+- Visualização dos **30 melhores clones por ciclo** em gráficos de barras  
 
 **Mensagem-chave:**  
-Os resultados confirmam **ganhos genéticos consistentes** ao longo dos ciclos, com clones mais recentes (C2) apresentando desempenho superior em rendimento e qualidade. O uso de BLUPs e índices de seleção fortalece a tomada de decisão no programa de melhoramento.
+Os resultados confirmam **ganhos genéticos consistentes** ao longo dos ciclos, com clones mais recentes (C2) apresentando desempenho superior em rendimento e qualidade.  
+O uso de BLUPs e índices de seleção fornece uma base sólida para **decisões estratégicas no programa de melhoramento**, acelerando o lançamento de variedades mais produtivas e adaptadas.
 

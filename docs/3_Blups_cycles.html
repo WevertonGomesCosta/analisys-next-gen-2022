@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Costa, W. G." />
+
+<meta name="date" content="2025-10-04" />
+
+<title>Blups cycles</title>
+
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Cassava Breeding – NextGen 2022</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="1_Trials-and-traits-2023.html">Trials &amp; Traits</a>
+</li>
+<li>
+  <a href="2_Phenotype_data.html">Phenotype Data</a>
+</li>
+<li>
+  <a href="3_Blups_cycles.html">BLUPs Cycles</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+<li>
+  <a href="https://www.embrapa.br/mandioca-e-fruticultura">Embrapa</a>
+</li>
+<li>
+  <a href="https://www.nextgencassava.org/">NextGen Cassava</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Blups cycles</h1>
+<h4 class="author">Costa, W. G.<a href="#fn1" class="footnote-ref"
+id="fnref1"><sup>1</sup></a></h4>
+<h4 class="date">2025-10-04</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2025-10-04
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>analisys-next-gen-2022/</code>
+<span class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.2). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown file has unstaged changes. To know which version of
+the R Markdown file created these results, you’ll want to first commit
+it to the Git repo. If you’re still working on the analysis, you can
+ignore this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20251003code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20251003)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20251003code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20251003)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaanalisysnextgen2022tree85ab19d965010c4c76e595405e2b5b4fa9d9b47ftargetblank85ab19da">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/tree/85ab19d965010c4c76e595405e2b5b4fa9d9b47f" target="_blank">85ab19d</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaanalisysnextgen2022tree85ab19d965010c4c76e595405e2b5b4fa9d9b47ftargetblank85ab19da"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/tree/85ab19d965010c4c76e595405e2b5b4fa9d9b47f" target="_blank">85ab19d</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rproj.user/
+    Ignored:    data/Arquivos Fieldbook 2022/BR.AYTInd.22.CMa_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.AYTInd.22.Candeal 8MP e 16cm_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.AYTInd.22.Estab_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.AYTInd.22.NH 16CM_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.AYTM.22.Candeal_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.AYTM.22.Estab_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.AYTM.22.NH1_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.AYTM.22.NH_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.AYTM.22.Pureza_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.AYTM.Candeal.22_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.CBGS-C4.22.CNPMF_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.CET.22.CNPMF.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.MULTGS-C3.22.Podium_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.MultGS.22.NH_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.PTBAG.22.Candeal Florescimento_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.PYT.22.Candeal_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.PYT.22.Jaguaripe_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.PYTO.22.Lon_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYT.22.Jagua_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYT.22.TRAC_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYT.WD.22.BJL_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.CMa_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.COMG_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.Candeal_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.CoC_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.CoH_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.ER_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.Esp_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.Estab_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.IFGua_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.ItiBA_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.LagDa_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.Mara_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.Mont_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.NH1_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.NH_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.PAMG_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.Quiss_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.SA_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.SDAP_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.TRAC_1.xls
+    Ignored:    data/Arquivos Fieldbook 2022/BR.UYTGS.22.VC_1.xls
+    Ignored:    data/phenotype.csv
+    Ignored:    output/StudyTraits.tiff
+    Ignored:    output/StudyYear.tiff
+
+Untracked files:
+    Untracked:  data/exclud_c0.csv
+
+Unstaged changes:
+    Modified:   analysis/3_Blups_cycles.Rmd
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/3_Blups_cycles.Rmd</code>) and
+HTML (<code>docs/3_Blups_cycles.html</code>) files. If you’ve configured
+a remote Git repository (see <code>?wflow_git_remote</code>), click on
+the hyperlinks in the table below to view the files as they were in that
+past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/blob/85ab19d965010c4c76e595405e2b5b4fa9d9b47f/analysis/3_Blups_cycles.Rmd" target="_blank">85ab19d</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-10-04
+</td>
+<td>
+update blups_cycles
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/analisys-next-gen-2022/blob/4edf925c4e678511698490f4a8e641820706f6cd/analysis/3_Blups_cycles.Rmd" target="_blank">4edf925</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-10-04
+</td>
+<td>
+add scripts rmd
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>This script estimates <strong>BLUPs (Best Linear Unbiased
+Predictions)</strong> for key agronomic and quality traits in cassava
+across different breeding cycles (C0, C1, C2).<br />
+The goals are:<br />
+- Fit mixed models by trial and across trials<br />
+- Estimate heritability (H²) and BLUPs for each clone<br />
+- Compare genetic progress across cycles (C0 → C1 → C2)<br />
+- Visualize results with regression plots and boxplots<br />
+- Compute a <strong>Selection Index (SI)</strong> integrating multiple
+traits</p>
+<hr />
+</div>
+<div id="step-1-load-packages" class="section level1">
+<h1>Step 1: Load Packages</h1>
+<pre class="r"><code>library(data.table)   # Efficient data handling
+library(metan)        # Mixed models and BLUPs
+library(tidyverse)    # Data wrangling and visualization
+library(foreach)      # Parallel loops
+library(doParallel)   # Parallel backend
+library(ggthemes)     # Plot themes
+library(ggpubr)       # Publication-ready plots
+library(ggpmisc)      # Regression annotations
+library(tidytext)     # Text manipulation</code></pre>
+<p><em>Comment:</em><br />
+These packages provide the statistical and visualization tools needed
+for BLUP estimation and interpretation.</p>
+<hr />
+</div>
+<div id="step-2-load-data" class="section level1">
+<h1>Step 2: Load Data</h1>
+<pre class="r"><code>phenosPod &lt;- readxl::read_excel(&quot;data/Dados_podridao_2018_2021.xlsx&quot;, na = &quot;NA&quot;)
+
+dbdata &lt;- readRDS(here::here(&quot;data&quot;, &quot;phenotypes_cleaned.rds&quot;)) %&gt;%
+  left_join(phenosPod, by = &quot;observationUnitName&quot;) %&gt;%
+  filter(!is.na(studyYear))</code></pre>
+<p><em>Interpretation:</em><br />
+We merge the cleaned phenotypic dataset with pod rot data
+(<code>Podridao</code>). Trials without year information are
+excluded.</p>
+<hr />
+</div>
+<div id="step-3-define-effects-and-traits" class="section level1">
+<h1>Step 3: Define Effects and Traits</h1>
+<pre class="r"><code>efeitos &lt;- c(&quot;germplasmName&quot;,&quot;yearInLoc&quot;,&quot;blockInTrial&quot;,&quot;studyYear&quot;,
+             &quot;trialInLocYr&quot;,&quot;studyName&quot;,&quot;Podridao&quot;,&quot;Pop&quot;,&quot;entryType&quot;)
+
+traits &lt;- c(&quot;DMCg&quot;, &quot;DRY&quot;, &quot;PA&quot;, &quot;StC&quot;, &quot;FRW&quot;, &quot;FSW&quot;)</code></pre>
+<p><em>Interpretation:</em><br />
+- <strong>Effects</strong>: identifiers for genotype, environment,
+design, and population.<br />
+- <strong>Traits</strong>: dry matter, yield, plant architecture,
+starch, root and shoot weights.</p>
+<hr />
+</div>
+<div id="step-4-data-filtering" class="section level1">
+<h1>Step 4: Data Filtering</h1>
+<p>We keep only relevant trials, remove those with high pod rot, and
+retain the dominant population per trial.</p>
+<pre class="r"><code>trialInLocYr_Pop_top &lt;- dbdata %&gt;%
+  group_by(trialInLocYr, Pop) %&gt;%
+  tally() %&gt;%
+  filter(!is.na(Pop)) %&gt;%
+  top_n(1, n) %&gt;%
+  filter(str_detect(trialInLocYr, &quot;UYT|AYT|PYT&quot;)) %&gt;%
+  filter(!(str_detect(trialInLocYr, &quot;PYT&quot;) &amp; Pop == &quot;C1&quot;)) %&gt;%
+  rename(Population = Pop)
+
+podridao &lt;- dbdata %&gt;%
+  group_by(trialInLocYr) %&gt;%
+  summarise_if(is.numeric, ~ mean(.x, na.rm = TRUE)) %&gt;%
+  filter(Podridao &gt;= 0.5)
+
+dbdata &lt;- dbdata %&gt;%
+  select(all_of(efeitos), all_of(traits)) %&gt;%
+  filter(studyYear &gt;= 2019 &amp; !(trialInLocYr %in% podridao$trialInLocYr)) %&gt;%
+  full_join(trialInLocYr_Pop_top)</code></pre>
+<p><em>Interpretation:</em><br />
+- Trials with <strong>&gt;50% pod rot</strong> are excluded.<br />
+- Only <strong>multi-environment trials (UYT, AYT, PYT)</strong> are
+kept.<br />
+- Ensures data quality and comparability across cycles.</p>
+<hr />
+</div>
+<div id="step-5-define-checks" class="section level1">
+<h1>Step 5: Define Checks</h1>
+<pre class="r"><code>checks &lt;- c(&quot;BRS-NovoHorizonte&quot;,&quot;BGM-2017&quot;,&quot;BRS-Mulatinha&quot;,&quot;BGM-2095&quot;,&quot;BGM-2151&quot;)</code></pre>
+<p><em>Interpretation:</em><br />
+These are standard <strong>check varieties</strong> used for
+benchmarking genetic gain.</p>
+<hr />
+</div>
+<div id="step-6-blup-estimation-by-trial" class="section level1">
+<h1>Step 6: BLUP Estimation by Trial</h1>
+<p>We define a helper function to extract <strong>heritability
+(H²)</strong>, BLUPs, and predicted means from each model.</p>
+<pre class="r"><code>analise_metan &lt;- function(model, trait, trial) {
+  H2 &lt;- get_model_data(model, &quot;genpar&quot;) %&gt;%
+    filter(Parameters == &quot;H2&quot;) %&gt;%
+    pull(trait)
+  
+  BLUPS &lt;- get_model_data(model, &quot;ranef&quot;)$GEN
+  
+  Predicted_values &lt;- predict(model) %&gt;%
+    group_by(GEN) %&gt;%
+    summarise(across(where(is.numeric), mean)) %&gt;%
+    pull(trait)
+  
+  tibble(trialInLocYr = trial, trait = trait, H2 = H2,
+         germplasmName = BLUPS[[1]], BLUPS = BLUPS[[2]],
+         Predicted = Predicted_values)
+}</code></pre>
+<p>We then run models in parallel for efficiency.</p>
+<pre class="r"><code>num_cores &lt;- detectCores()
+registerDoParallel(cores = num_cores)
+
+BLUPS &lt;- foreach(trait = traits, .combine = bind_rows, .packages  = c(&quot;tidyverse&quot;, &quot;metan&quot;)) %dopar% {
+  DRG &lt;- list()
+  for (l in unique(dbdata$trialInLocYr)) {
+    data &lt;- dbdata %&gt;% filter(trialInLocYr == l) %&gt;% droplevels()
+    if (!is.na(mean(data[[trait]], na.rm = TRUE))) {
+      model &lt;- gamem(data, gen = germplasmName, rep = blockInTrial, resp = sym(trait))
+      DRG &lt;- append(DRG, list(analise_metan(model, trait, l)))
+    }
+  }
+  bind_rows(DRG)
+}
+registerDoSEQ()</code></pre>
+<p><em>Interpretation:</em><br />
+This step fits <strong>mixed models per trial</strong> and extracts
+BLUPs and H² for each trait.</p>
+<hr />
+<div id="step-6.1-adicionar-variável-pop" class="section level2">
+<h2>Step 6.1: Adicionar variável Pop</h2>
+<p>Classificamos os clones em suas respectivas populações (C0, C1, C2),
+com base no nome ou código de tecido.</p>
+<pre class="r"><code>C0 &lt;- fread(&quot;data/TP-BR-18-EMBRAPA-Nextgen.csv&quot;,
+            sep = &quot;;&quot;,
+            na.strings = &quot;&quot;) %&gt;%
+      filter(!tissue_id %in% read.table(&quot;data/exclud_c0.csv&quot;)[[1]])
+
+BLUPS1 &lt;- BLUPS %&gt;%
+  mutate(Pop = as.factor(
+    case_when(
+      germplasmName %like% &quot;BR-20GS-&quot; |
+      germplasmName %like% &quot;BR-19GS-&quot; ~ &quot;C2&quot;,
+      germplasmName %like% &quot;BR-18GS-&quot;  ~ &quot;C1&quot;,
+      germplasmName %in% C0$tissue_id  ~ &quot;C0&quot;
+    )
+  )) %&gt;%
+  mutate(entryType = ifelse(germplasmName %in% checks, &quot;check&quot;, &quot;test&quot;))
+
+#save(BLUPS1, file = &quot;output/BLUPS_metan.RData&quot;)</code></pre>
+<p><em>Interpretation:</em> - Each clone is assigned to its
+<strong>breeding cycle</strong>. - This classification is crucial for
+comparing genetic gains across cycles.</p>
+<p>Interpretação: Essa classificação permite comparar o desempenho
+genético entre ciclos de seleção.</p>
+<p>C0: população base (fundadores)</p>
+<p>C1: clones selecionados em 2018</p>
+<p>C2: clones selecionados em 2019–2020</p>
+</div>
+</div>
+<div id="step-7-regression-across-cycles" class="section level1">
+<h1>Step 7: Regression Across Cycles</h1>
+<p>We test whether predicted means increase across populations (C0 → C1
+→ C2).</p>
+<pre class="r"><code>resultado &lt;- NULL
+for (i in traits) {
+  test &lt;- BLUPS1 %&gt;%
+    filter(trait == i &amp; !is.na(Pop) &amp; H2 &gt;= 0.5) %&gt;%
+    aov(formula = Predicted ~ as.numeric(Pop))
+  pvalue &lt;- round(anova(test)[[1, 5]], 4)
+  resultado &lt;- c(resultado, paste0(i,&quot;: &quot;,round(coef(test)[[2]], 4),
+                                   &quot; (p&quot;, ifelse(pvalue &lt; 0.001,&quot;&lt;0.001&quot;,paste0(&quot;=&quot;,pvalue)),&quot;)&quot;))
+}
+names(resultado) &lt;- traits</code></pre>
+<p>We then plot regression lines:</p>
+<pre class="r"><code>BLUPS1 %&gt;%
+  filter(!is.na(Pop) &amp; H2 &gt;= 0.5) %&gt;%
+  ggplot(aes(x = as.numeric(Pop), y = Predicted)) +
+  geom_point() +
+  stat_poly_line() +
+  facet_wrap(~ trait, ncol = 3, scales = &quot;free_y&quot;, labeller = as_labeller(resultado)) +
+  theme_bw(base_size = 15) +
+  scale_x_continuous(breaks = 1:3, labels = c(&quot;C0&quot;,&quot;C1&quot;,&quot;C2&quot;)) +
+  labs(x = &quot;Population&quot;, y = &quot;&quot;)</code></pre>
+<p><img src="figure/3_Blups_cycles.Rmd/unnamed-chunk-10-1.png" width="100%" style="display: block; margin: auto;" /></p>
+<p><em>Interpretation:</em><br />
+Regression slopes indicate <strong>genetic gain per cycle</strong>.
+Significant positive slopes confirm progress.</p>
+<hr />
+</div>
+<div id="step-8-boxplots-by-cycle" class="section level1">
+<h1>Step 8: Boxplots by Cycle</h1>
+<pre class="r"><code>BLUPS1 %&gt;%
+  full_join(trialInLocYr_Pop_top) %&gt;%
+  filter(!is.na(Population) &amp; H2 &gt;= 0.5) %&gt;%
+  mutate(entryType = ifelse(germplasmName %in% checks, &quot;check&quot;, &quot;test&quot;)) %&gt;%
+  ggboxplot(x = &quot;Population&quot;, y = &quot;Predicted&quot;, fill = &quot;entryType&quot;) +
+  facet_wrap(trait ~ ., scales = &quot;free_y&quot;, strip.position = &quot;left&quot;) +
+  theme_bw(base_size = 15) +
+  labs(x = &quot;Population&quot;, y = &quot;&quot;, fill = &quot;Entry Type&quot;)</code></pre>
+<p><img src="figure/3_Blups_cycles.Rmd/unnamed-chunk-11-1.png" width="100%" style="display: block; margin: auto;" /></p>
+<p><em>Interpretation:</em><br />
+Boxplots show the distribution of predicted values per cycle,
+contrasting <strong>checks vs tests</strong>. This highlights the
+superiority of selected clones over checks.</p>
+<hr />
+</div>
+<div id="step-9-joint-analysis" class="section level1">
+<h1>Step 9: Joint Analysis</h1>
+<p>Até aqui, rodamos modelos <strong>por ensaio</strong>. Agora, fazemos
+uma <strong>análise conjunta</strong> (multi‑environment trial
+analysis), que permite estimar BLUPs considerando todos os ambientes
+(locais/anos) simultaneamente. Isso aumenta a precisão e permite avaliar
+a estabilidade dos clones.</p>
+<div id="função-auxiliar" class="section level2">
+<h2>Função auxiliar</h2>
+<pre class="r"><code>analise_metan_joint &lt;- function(model, trait) {
+  H2 &lt;- get_model_data(model, &quot;genpar&quot;) %&gt;%
+    filter(Parameters == &quot;Heritability&quot;) %&gt;%
+    pull(trait)
+  
+  BLUPS &lt;- get_model_data(model, &quot;ranef&quot;)$GEN
+  
+  Predicted_values &lt;- predict(model) %&gt;%
+    group_by(GEN) %&gt;%
+    summarise(across(where(is.numeric), mean)) %&gt;%
+    pull(trait)
+  
+  tibble(
+    trait = trait,
+    H2 = H2,
+    germplasmName = BLUPS[[1]],
+    BLUPS = BLUPS[[2]],
+    Predicted = Predicted_values
+  )
+}</code></pre>
+<p><em>Comentário:</em><br />
+Essa função retorna, para cada característica:<br />
+- <strong>H² (heritabilidade)</strong> → precisão da seleção.<br />
+- <strong>BLUPs</strong> → valores ajustados por clone.<br />
+- <strong>Predicted</strong> → médias preditas considerando todos os
+ambientes.</p>
+<hr />
+</div>
+<div id="obtenção-dos-blups-conjuntos" class="section level2">
+<h2>Obtenção dos BLUPs conjuntos</h2>
+<pre class="r"><code>num_cores &lt;- detectCores()
+registerDoParallel(cores = num_cores)
+
+BLUPS_join &lt;- foreach(
+  trait = traits,
+  .combine = bind_rows,
+  .multicombine = TRUE,
+  .verbose = TRUE,
+  .packages = c(&quot;tidyverse&quot;, &quot;metan&quot;)
+) %dopar% {
+  DRG &lt;- list()
+  
+  data &lt;- dbdata %&gt;%
+    select(1:6, trait, 16) %&gt;%
+    na.omit() %&gt;%
+    droplevels()
+  
+  if (!is.na(mean(data[[trait]], na.rm = TRUE))) {
+    model &lt;- gamem_met(
+      data,
+      env = trialInLocYr,
+      gen = germplasmName,
+      rep = blockInTrial,
+      resp = sym(trait)
+    )
+    DRG &lt;- append(DRG, list(analise_metan_joint(model, trait)))
+  }
+  
+  bind_rows(DRG)
+}</code></pre>
+<pre><code>discovered package(s): 
+automatically exporting the following variables from the local environment:
+  analise_metan_joint, dbdata 
+explicitly exporting package(s): tidyverse, metan
+numValues: 6, numResults: 0, stopped: TRUE
+got results for task 1
+numValues: 6, numResults: 1, stopped: TRUE
+returning status FALSE
+got results for task 2
+numValues: 6, numResults: 2, stopped: TRUE
+returning status FALSE
+got results for task 3
+numValues: 6, numResults: 3, stopped: TRUE
+returning status FALSE
+got results for task 4
+numValues: 6, numResults: 4, stopped: TRUE
+returning status FALSE
+got results for task 5
+numValues: 6, numResults: 5, stopped: TRUE
+returning status FALSE
+got results for task 6
+numValues: 6, numResults: 6, stopped: TRUE
+first call to combine function
+evaluating call object to combine results:
+  fun(result.1, result.2, result.3, result.4, result.5, result.6)
+returning status TRUE</code></pre>
+<pre class="r"><code>registerDoSEQ()</code></pre>
+<p><em>Interpretação:</em><br />
+Aqui usamos o <strong><code>gamem_met</code></strong> para ajustar
+modelos mistos multiambiente. Isso permite separar efeitos de genótipo,
+ambiente e interação G×E, fornecendo BLUPs mais robustos.</p>
+<hr />
+</div>
+<div id="step-10-adicionar-variável-pop" class="section level2">
+<h2>Step 10: Adicionar variável Pop</h2>
+<pre class="r"><code>C0 &lt;- fread(&quot;data/TP-BR-18-EMBRAPA-Nextgen.csv&quot;,
+            sep = &quot;;&quot;,
+            na.strings = &quot;&quot;) %&gt;%
+      filter(!tissue_id %in% read.table(&quot;data/exclud_c0.csv&quot;)[[1]])
+
+BLUPS_join1 &lt;- BLUPS_join %&gt;%
+  mutate(Pop = as.factor(
+    case_when(
+      germplasmName %like% &quot;BR-20GS-&quot; |
+      germplasmName %like% &quot;BR-19GS-&quot; ~ &quot;C2&quot;,
+      germplasmName %like% &quot;BR-18GS-&quot; |
+      germplasmName %like% &quot;BR-18-040.40&quot; ~ &quot;C1&quot;,
+      germplasmName %in% C0$tissue_id  ~ &quot;C0&quot;
+    )
+  ))
+
+#save(BLUPS_join1, file = &quot;output/BLUPS_metan_join.RData&quot;)</code></pre>
+<p><em>Interpretação:</em><br />
+Cada clone recebe sua classificação de ciclo (<strong>C0, C1,
+C2</strong>). Isso é essencial para comparar ganhos genéticos entre
+gerações.</p>
+<hr />
+<p>Excelente, Weverton 🙌. Esse trecho já está muito bem estruturado,
+mas podemos deixar as descrições e interpretações ainda mais claras e
+didáticas, para que qualquer leitor entenda não só o que foi feito, mas
+também <strong>por que</strong> foi feito e <strong>como interpretar os
+resultados</strong>.</p>
+<hr />
+</div>
+</div>
+<div id="step-11-selection-index-si" class="section level1">
+<h1>Step 11: Selection Index (SI)</h1>
+<p>O <strong>Índice de Seleção (SI)</strong> é uma métrica composta que
+integra múltiplas características em uma única pontuação
+ponderada.<br />
+Ele reflete os objetivos do programa de melhoramento, atribuindo maior
+peso às características de maior relevância (ex.: rendimento e qualidade
+de raiz).</p>
+<pre class="r"><code>BLUPS_join1 &lt;- BLUPS_join1 %&gt;%
+  select(-H2,-BLUPS) %&gt;%
+  pivot_wider(names_from = trait, values_from = Predicted) %&gt;%
+  mutate(
+    SI = 5 * coalesce(DMCg, 0) +
+      8 * (coalesce(PA, 0) + coalesce(FSW, 0)) +
+      10 * (coalesce(StC, 0) + coalesce(FRW, 0) + coalesce(DRY, 0)),
+    entryType = if_else(germplasmName %in% checks, &quot;check&quot;, &quot;test&quot;),
+    germplasmName = reorder(germplasmName, desc(SI))
+  )</code></pre>
+<p><strong>Interpretação:</strong><br />
+- Os <strong>pesos</strong> (5, 8, 10) refletem a prioridade do
+programa:<br />
+- <strong>Rendimento (FRW, DRY, StC)</strong> → peso maior (10).<br />
+- <strong>Arquitetura e biomassa aérea (PA, FSW)</strong> → peso
+intermediário (8).<br />
+- <strong>Qualidade (DMCg)</strong> → peso menor, mas ainda relevante
+(5).<br />
+- O SI permite <strong>ranquear clones</strong> de forma integrada,
+evitando decisões baseadas em apenas uma característica.<br />
+- Clones com SI mais alto são os <strong>principais candidatos à
+seleção</strong>.</p>
+<hr />
+</div>
+<div id="step-12-visualização-dos-melhores-clones-por-ciclo"
+class="section level1">
+<h1>Step 12: Visualização dos Melhores Clones por Ciclo</h1>
+<div id="gráfico-de-barras-gs-c1" class="section level2">
+<h2>Gráfico de Barras – GS-C1</h2>
+<p>Aqui visualizamos os <strong>30 melhores clones da população
+C1</strong> (mais checks), ranqueados pelo SI.</p>
+<pre class="r"><code>BLUPS_join1 %&gt;% 
+  mutate(entryType = if_else(germplasmName %in% checks, &quot;check&quot;, &quot;test&quot;)) %&gt;% 
+  filter(Pop == &quot;C1&quot; | entryType == &quot;check&quot;) %&gt;%
+  droplevels() %&gt;% 
+  group_by(germplasmName) %&gt;%
+  arrange(desc(SI)) %&gt;%
+  ungroup() %&gt;%
+  slice(1:30) %&gt;%
+  ggplot(aes(x = germplasmName, y = SI, fill = entryType)) +
+  geom_col(width = 0.75, alpha = 0.9, show.legend = F) +
+  scale_fill_gdocs() +
+  theme_minimal() +
+  scale_x_reordered() +
+  theme(text = element_text(size = 15, face = &quot;bold&quot;),
+        axis.text.x = element_text(size = 18, angle = 45, hjust = 1, vjust = 1.1),
+        legend.title = element_blank(),
+        legend.position = &quot;bottom&quot;,
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.spacing.x = unit(0.2, &quot;lines&quot;),
+        strip.background = element_blank(),
+        strip.text.x = element_text(size = 12, face = &quot;bold&quot;)) +
+  labs(x = &quot;Clone&quot;,
+       y = &quot;Selection Index&quot;,
+       fill = &quot;Entry Type&quot;,
+       title = &quot;GS-C1&quot;)</code></pre>
+<p><img src="figure/3_Blups_cycles.Rmd/unnamed-chunk-16-1.png" width="100%" style="display: block; margin: auto;" /></p>
+<p><strong>Interpretação:</strong><br />
+- O gráfico mostra os <strong>30 clones mais promissores da
+C1</strong>.<br />
+- A presença dos <strong>checks</strong> permite comparar o desempenho
+dos novos clones com variedades já conhecidas.<br />
+- Clones acima dos checks indicam <strong>avanço genético
+real</strong>.</p>
+<hr />
+</div>
+<div id="gráfico-de-barras-gs-c2" class="section level2">
+<h2>Gráfico de Barras – GS-C2</h2>
+<p>O mesmo procedimento é feito para a <strong>população
+C2</strong>.</p>
+<pre class="r"><code>BLUPS_join1 %&gt;% 
+  mutate(entryType = if_else(germplasmName %in% checks, &quot;check&quot;, &quot;test&quot;)) %&gt;%
+  filter(Pop == &quot;C2&quot; | entryType == &quot;check&quot;) %&gt;%
+  droplevels() %&gt;% 
+  group_by(germplasmName) %&gt;%
+  arrange(desc(SI)) %&gt;%
+  ungroup() %&gt;%
+  slice(1:30) %&gt;%
+  ggplot(aes(x = germplasmName, y = SI, fill = entryType)) +
+  geom_col(width = 0.75, alpha = 0.9, show.legend = F) +
+  scale_fill_gdocs() +
+  theme_minimal() +
+  scale_x_reordered() +
+  theme(text = element_text(size = 15, face = &quot;bold&quot;),
+        axis.text.x = element_text(size = 18, angle = 45, hjust = 1, vjust = 1.1),
+        legend.title = element_blank(),
+        legend.position = &quot;bottom&quot;,
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.spacing.x = unit(0.2, &quot;lines&quot;),
+        strip.background = element_blank(),
+        strip.text.x = element_text(size = 12, face = &quot;bold&quot;)) +
+  labs(x = &quot;Clone&quot;,
+       y = &quot;Selection Index&quot;,
+       fill = &quot;Entry Type&quot;,
+       title = &quot;GS-C2&quot;)</code></pre>
+<p><img src="figure/3_Blups_cycles.Rmd/unnamed-chunk-17-1.png" width="100%" style="display: block; margin: auto;" /></p>
+<p><strong>Interpretação:</strong><br />
+- Os <strong>30 melhores clones da C2</strong> apresentam, em geral, SI
+mais alto que os da C1.<br />
+- Isso confirma o <strong>ganho genético entre ciclos</strong>, com C2
+superando C1 e os checks.<br />
+- O gráfico evidencia a <strong>eficiência da seleção genômica</strong>
+no programa.</p>
+<hr />
+</div>
+</div>
+<div id="conclusão" class="section level1">
+<h1>Conclusão</h1>
+<p>Neste script, realizamos:<br />
+- Estimativa de <strong>BLUPs por ensaio</strong> e
+<strong>conjunta</strong><br />
+- Cálculo de <strong>H²</strong> para avaliar confiabilidade<br />
+- Comparação entre ciclos (C0 → C1 → C2) via regressão e boxplots<br />
+- Construção de um <strong>Índice de Seleção (SI)</strong> para
+priorizar clones superiores<br />
+- Visualização dos <strong>30 melhores clones por ciclo</strong> em
+gráficos de barras</p>
+<p><strong>Mensagem-chave:</strong><br />
+Os resultados confirmam <strong>ganhos genéticos consistentes</strong>
+ao longo dos ciclos, com clones mais recentes (C2) apresentando
+desempenho superior em rendimento e qualidade.<br />
+O uso de BLUPs e índices de seleção fornece uma base sólida para
+<strong>decisões estratégicas no programa de melhoramento</strong>,
+acelerando o lançamento de variedades mais produtivas e adaptadas.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.5.1 (2025-06-13 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26100)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=Portuguese_Brazil.utf8  LC_CTYPE=Portuguese_Brazil.utf8   
+[3] LC_MONETARY=Portuguese_Brazil.utf8 LC_NUMERIC=C                      
+[5] LC_TIME=Portuguese_Brazil.utf8    
+
+time zone: America/Sao_Paulo
+tzcode source: internal
+
+attached base packages:
+[1] parallel  stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+ [1] tidytext_0.4.3    ggpmisc_0.6.2     ggpp_0.5.9        ggpubr_0.6.1     
+ [5] ggthemes_5.1.0    doParallel_1.0.17 iterators_1.0.14  foreach_1.5.2    
+ [9] lubridate_1.9.4   forcats_1.0.0     stringr_1.5.2     dplyr_1.1.4      
+[13] purrr_1.1.0       readr_2.1.5       tidyr_1.3.1       tibble_3.3.0     
+[17] ggplot2_4.0.0     tidyverse_2.0.0   metan_1.19.0      data.table_1.17.8
+
+loaded via a namespace (and not attached):
+ [1] Rdpack_2.6.4        polynom_1.4-1       readxl_1.4.5       
+ [4] rlang_1.1.6         magrittr_2.0.4      git2r_0.36.2       
+ [7] compiler_4.5.1      vctrs_0.6.5         quantreg_6.1       
+[10] pkgconfig_2.0.3     fastmap_1.2.0       backports_1.5.0    
+[13] labeling_0.4.3      promises_1.3.3      rmarkdown_2.29     
+[16] tzdb_0.5.0          nloptr_2.2.1        MatrixModels_0.5-4 
+[19] xfun_0.53           cachem_1.1.0        jsonlite_2.0.0     
+[22] SnowballC_0.7.1     later_1.4.4         tweenr_2.0.3       
+[25] broom_1.0.10        R6_2.6.1            bslib_0.9.0        
+[28] stringi_1.8.7       RColorBrewer_1.1-3  GGally_2.4.0       
+[31] car_3.1-3           boot_1.3-31         cellranger_1.1.0   
+[34] jquerylib_0.1.4     numDeriv_2016.8-1.1 Rcpp_1.1.0         
+[37] knitr_1.50          httpuv_1.6.16       Matrix_1.7-3       
+[40] splines_4.5.1       timechange_0.3.0    tidyselect_1.2.1   
+[43] rstudioapi_0.17.1   abind_1.4-8         yaml_2.3.10        
+[46] codetools_0.2-20    lattice_0.22-7      lmerTest_3.1-3     
+[49] withr_3.0.2         S7_0.2.0            evaluate_1.0.5     
+[52] survival_3.8-3      ggstats_0.11.0      polyclip_1.10-7    
+[55] pillar_1.11.1       carData_3.0-5       janeaustenr_1.0.0  
+[58] whisker_0.4.1       reformulas_0.4.1    generics_0.1.4     
+[61] rprojroot_2.1.1     mathjaxr_1.8-0      hms_1.1.3          
+[64] scales_1.4.0        minqa_1.2.8         glue_1.8.0         
+[67] tools_4.5.1         tokenizers_0.3.0    lme4_1.1-37        
+[70] SparseM_1.84-2      ggsignif_0.6.4      fs_1.6.6           
+[73] grid_4.5.1          rbibutils_2.3       nlme_3.1-168       
+[76] patchwork_1.3.2     ggforce_0.5.0       Formula_1.2-5      
+[79] cli_3.6.5           workflowr_1.7.2     gtable_0.3.6       
+[82] rstatix_0.7.2       sass_0.4.10         digest_0.6.37      
+[85] ggrepel_0.9.6       farver_2.1.2        htmltools_0.5.8.1  
+[88] lifecycle_1.0.4     here_1.0.2          MASS_7.3-65        </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>Weverton Gomes da Costa, Pós-Doutorando, Embrapa
+Mandioca e Fruticultura, <a href="mailto:wevertonufv@gmail.com"
+class="email">wevertonufv@gmail.com</a><a href="#fnref1"
+class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
