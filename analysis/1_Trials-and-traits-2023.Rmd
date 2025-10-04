@@ -97,8 +97,6 @@ number_trials_year <- dbdata %>%
   group_by(studyYear) %>%
   tally() %>% 
   mutate(n = ifelse(studyYear == "2022/2023", 49, n))
-
-write.table(number_trials_year, "output/number_trials_year.csv", sep = ",", row.names = F)
 ```
 
 ### Plotting the number of trials
@@ -121,8 +119,6 @@ number_trials_year %>%
   ) +
   theme(text = element_text(size = 10),
         axis.text.x = element_text(face ="bold", angle = 45, hjust = 1))
-
-ggsave("output/StudyYear.tiff", width = 16, height = 8)
 ```
 
 *Interpretation:*  
@@ -172,8 +168,6 @@ number_traits_year %>%
   ) +
   theme(text = element_text(size = 10),
         axis.text.x = element_text(face ="bold", angle = 45, hjust = 1))
-
-ggsave("output/StudyTraits.tiff", width = 16, height = 8)
 ```
 
 *Interpretation:*  
@@ -194,8 +188,6 @@ number_traits_year2 <- number_traits_year %>%
   row_to_names(row_number = 1) %>%
   as_tibble(rownames = "Trait") %>%
   mutate(across(c(2:12), ~ ifelse(. == 1, "x", NA)))
-
-write.table(number_traits_year2, "output/number_traits_year2.csv", sep = ",", row.names = F)
 ```
 
 *Interpretation:*  
@@ -247,8 +239,6 @@ accession_number <- trials_22 %>%
   tally() %>%
   ungroup() %>%
   rename(n_clones = n)
-
-write.table(accession_number, "output/accession_number.csv", sep = ",", row.names = F)
 ```
 
 *Interpretation:*  
@@ -312,8 +302,6 @@ UYT <- trials_22 %>%
 locate_UYT <- UYT %>%
   group_by(locate) %>%
   tally()
-
-write.table(UYT, "output/SUMMARY OF FIELD TRIALS_UYT.csv", sep = ",", row.names = F)
 ```
 
 *Interpretation:*  
@@ -343,8 +331,6 @@ trials_22 <- list.files(path = "data/Arquivos Fieldbook 2022",
   pivot_wider(names_from = locate, values_from = n) %>%
   filter(!str_detect(trial, "UYT")) %>%
   select_if(~ !all(is.na(.)))
-
-write.table(trials_22, "output/SUMMARY OF FIELD TRIALS.csv", sep = ",", row.names = F)
 
 trials_22 %>%
   mutate(soma = rowSums(.[3:ncol(trials_22)], na.rm = T)) %>%
