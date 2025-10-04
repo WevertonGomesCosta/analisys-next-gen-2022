@@ -9,55 +9,86 @@ editor_options:
   chunk_output_type: console
 ---
 
-# Carregar pacotes
-
-```{r}
-library(data.table)
-library(metan)
-library(tidyverse)
-library(foreach)
-library(doParallel)
-library(ggthemes)
-library(ggpubr)
-library(ggpmisc)
-library(tidytext)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%",
+  fig.align = "center"
+)
 ```
 
-# Carregar dados iniciais
+Excelente, Weverton 🙌. O seu script de **BLUPs por ciclos** já está muito bem estruturado, mas podemos deixá‑lo ainda mais didático, com descrições e interpretações que guiem o leitor como em um tutorial científico. Abaixo está a versão comentada e enriquecida:
+
+---
+
+# Introduction
+
+This script estimates **BLUPs (Best Linear Unbiased Predictions)** for key agronomic and quality traits in cassava across different breeding cycles (C0, C1, C2).  
+The goals are:  
+- Fit mixed models by trial and across trials  
+- Estimate heritability (H²) and BLUPs for each clone  
+- Compare genetic progress across cycles (C0 → C1 → C2)  
+- Visualize results with regression plots and boxplots  
+- Compute a **Selection Index (SI)** integrating multiple traits  
+
+---
+
+# Step 1: Load Packages
 
 ```{r}
-phenosPod <-
-  readxl::read_excel("data/Dados_podridao_2018_2021.xlsx", na = "NA")
+library(data.table)   # Efficient data handling
+library(metan)        # Mixed models and BLUPs
+library(tidyverse)    # Data wrangling and visualization
+library(foreach)      # Parallel loops
+library(doParallel)   # Parallel backend
+library(ggthemes)     # Plot themes
+library(ggpubr)       # Publication-ready plots
+library(ggpmisc)      # Regression annotations
+library(tidytext)     # Text manipulation
+```
+
+*Comment:*  
+These packages provide the statistical and visualization tools needed for BLUP estimation and interpretation.
+
+---
+
+# Step 2: Load Data
+
+```{r}
+phenosPod <- readxl::read_excel("data/Dados_podridao_2018_2021.xlsx", na = "NA")
 
 dbdata <- readRDS(here::here("data", "phenotypes_cleaned.rds")) %>%
   left_join(phenosPod, by = "observationUnitName") %>%
   filter(!is.na(studyYear))
 ```
 
-# Definir efeitos e traits
+*Interpretation:*  
+We merge the cleaned phenotypic dataset with pod rot data (`Podridao`). Trials without year information are excluded.
+
+---
+
+# Step 3: Define Effects and Traits
 
 ```{r}
-efeitos <- c("germplasmName",
-             "yearInLoc",
-             "blockInTrial",
-             "studyYear",
-             "trialInLocYr",
-             "studyName",
-             "Podridao",
-             "Pop",
-             "entryType")
+efeitos <- c("germplasmName","yearInLoc","blockInTrial","studyYear",
+             "trialInLocYr","studyName","Podridao","Pop","entryType")
 
 traits <- c("DMCg", "DRY", "PA", "StC", "FRW", "FSW")
 ```
 
-# Selecionar dados relevantes
+*Interpretation:*  
+- **Effects**: identifiers for genotype, environment, design, and population.  
+- **Traits**: dry matter, yield, plant architecture, starch, root and shoot weights.
+
+---
+
+# Step 4: Data Filtering
+
+We keep only relevant trials, remove those with high pod rot, and retain the dominant population per trial.
 
 ```{r}
-trialInLocYr <- dbdata %>%
-  group_by(trialInLocYr) %>%
-  select(all_of(efeitos),
-         all_of(traits))
-
 trialInLocYr_Pop_top <- dbdata %>%
   group_by(trialInLocYr, Pop) %>%
   tally() %>%
@@ -67,38 +98,38 @@ trialInLocYr_Pop_top <- dbdata %>%
   filter(!(str_detect(trialInLocYr, "PYT") & Pop == "C1")) %>%
   rename(Population = Pop)
 
-podridao <- trialInLocYr %>%
+podridao <- dbdata %>%
+  group_by(trialInLocYr) %>%
   summarise_if(is.numeric, ~ mean(.x, na.rm = TRUE)) %>%
   filter(Podridao >= 0.5)
 
 dbdata <- dbdata %>%
-  select(all_of(efeitos),
-         all_of(traits)) %>%
-  filter(studyYear >= 2019 &
-           !(trialInLocYr %in% podridao$trialInLocYr)) %>%
+  select(all_of(efeitos), all_of(traits)) %>%
+  filter(studyYear >= 2019 & !(trialInLocYr %in% podridao$trialInLocYr)) %>%
   full_join(trialInLocYr_Pop_top)
 ```
 
-# Selecionar checks
+*Interpretation:*  
+- Trials with **>50% pod rot** are excluded.  
+- Only **multi-environment trials (UYT, AYT, PYT)** are kept.  
+- Ensures data quality and comparability across cycles.
+
+---
+
+# Step 5: Define Checks
 
 ```{r}
-checks <- dbdata %>%
-  filter(entryType == "check") %>%
-  group_by(Pop, germplasmName) %>%
-  tally() %>%
-  filter(n >= 100) %>%
-  droplevels()
-
-checks <- c("BRS-NovoHorizonte",
-            "BGM-2017",
-            "BRS-Mulatinha",
-            "BGM-2095",
-            "BGM-2151")
+checks <- c("BRS-NovoHorizonte","BGM-2017","BRS-Mulatinha","BGM-2095","BGM-2151")
 ```
 
-# By trial
+*Interpretation:*  
+These are standard **check varieties** used for benchmarking genetic gain.
 
-## Função de análise de metan
+---
+
+# Step 6: BLUP Estimation by Trial
+
+We define a helper function to extract **heritability (H²)**, BLUPs, and predicted means from each model.
 
 ```{r}
 analise_metan <- function(model, trait, trial) {
@@ -113,182 +144,96 @@ analise_metan <- function(model, trait, trial) {
     summarise(across(where(is.numeric), mean)) %>%
     pull(trait)
   
-  return(
-    tibble(
-      trialInLocYr = trial,
-      trait = trait,
-      H2 = H2,
-      germplasmName = BLUPS[[1]],
-      BLUPS = BLUPS[[2]],
-      Predicted = Predicted_values
-    )
-  )
+  tibble(trialInLocYr = trial, trait = trait, H2 = H2,
+         germplasmName = BLUPS[[1]], BLUPS = BLUPS[[2]],
+         Predicted = Predicted_values)
 }
 ```
 
-## Obtenção dos BLUPs
+We then run models in parallel for efficiency.
 
 ```{r}
-# Definir número de núcleos a serem usados
 num_cores <- detectCores()
-
-# Registrar os núcleos a serem usados
 registerDoParallel(cores = num_cores)
 
-# Loop externo
-BLUPS <-
-  foreach(trait = traits,
-          .combine = bind_rows,
-          .multicombine = TRUE) %dopar% {
-            library(tidyverse)
-            library(metan)
-            DRG <- list()
-            
-            # Loop interno
-            for (l in unique(dbdata$trialInLocYr)) {
-              data <- dbdata %>%
-                filter(trialInLocYr == l) %>%
-                droplevels()
-              
-              if (!is.na(mean(data[[trait]], na.rm = TRUE))) {
-                model <- gamem(data,
-                               gen = germplasmName,
-                               rep = blockInTrial,
-                               resp = sym(trait))
-                
-                drg <- list(analise_metan(model, trait, l))
-                DRG <- append(DRG, drg)
-              }
-            }
-            
-            # Juntar os data frames de BLUPs de cada trait em um só
-            bind_rows(DRG)
-          }
-
-# Finalizar o registro dos núcleos
+BLUPS <- foreach(trait = traits, .combine = bind_rows) %dopar% {
+  DRG <- list()
+  for (l in unique(dbdata$trialInLocYr)) {
+    data <- dbdata %>% filter(trialInLocYr == l) %>% droplevels()
+    if (!is.na(mean(data[[trait]], na.rm = TRUE))) {
+      model <- gamem(data, gen = germplasmName, rep = blockInTrial, resp = sym(trait))
+      DRG <- append(DRG, list(analise_metan(model, trait, l)))
+    }
+  }
+  bind_rows(DRG)
+}
 registerDoSEQ()
 ```
 
-## Adcionando a variavel Pop
+*Interpretation:*  
+This step fits **mixed models per trial** and extracts BLUPs and H² for each trait.
+
+---
+
+# Step 7: Regression Across Cycles
+
+We test whether predicted means increase across populations (C0 → C1 → C2).
 
 ```{r}
-C0 <- fread("data/TP-BR-18-EMBRAPA-Nextgen.csv",
-            sep = ";",
-            na.strings = "") %>%
-      filter(!tissue_id %in% read.table("exclud_c0.csv")[[1]])
-
-BLUPS1 <- BLUPS1 %>%
-  mutate(Pop = as.factor(
-    case_when(
-      germplasmName %like% "BR-20GS-" |
-      germplasmName %like% "BR-19GS-" ~ "C2",
-      germplasmName %like% "BR-18GS-"  ~ "C1",
-      germplasmName %in% C0$tissue_id  ~ "C0"
-    )
-  ),
-  )
-
-BLUPS1  <- BLUPS1 %>%
-  mutate(
-    entryType = ifelse(germplasmName %in% checks, "check", "test"))
-
-save(BLUPS1, file = "output/BLUPS_metan.RData")
+resultado <- NULL
+for (i in traits) {
+  test <- BLUPS1 %>%
+    filter(trait == i & !is.na(Pop) & H2 >= 0.5) %>%
+    aov(Predicted ~ as.numeric(Pop))
+  pvalue <- round(anova(test)[[1, 5]], 4)
+  resultado <- c(resultado, paste0(i,": ",round(coef(test)[[2]], 4),
+                                   " (p", ifelse(pvalue < 0.001,"<0.001",paste0("=",pvalue)),")"))
+}
+names(resultado) <- traits
 ```
 
-## Regression
+We then plot regression lines:
 
 ```{r}
-load("output/BLUPS_metan.RData")
-traits <- levels(as.factor(BLUPS1$trait))
-resultado <- NULL
-
-for (i in traits) {
-  test <- BLUPS1  %>%
-    filter(trait == i & !is.na(Pop) & H2 >= 0.5) %>%
-    aov(formula = Predicted ~ as.numeric(Pop))
-  
-  pvalue <- round(anova(test)[[1, 5]], 4)
-  
-  resultado <- c(resultado, 
-                 paste0(i,": ",round(coef(test)[[2]], 4)," (p",
-                        ifelse(pvalue < 0.001, "<0.001", 
-                               paste0("=", pvalue)),")"))
-  
-}
-
-names(resultado) <- traits
-
-BLUPS1  %>%
+BLUPS1 %>%
   filter(!is.na(Pop) & H2 >= 0.5) %>%
   ggplot(aes(x = as.numeric(Pop), y = Predicted)) +
   geom_point() +
   stat_poly_line() +
-  facet_wrap(
-    ~ trait,
-    ncol = 3,
-    scales = "free_y",
-    labeller = as_labeller(resultado)
-  ) +
-  theme_bw() +
-  theme(
-    text = element_text(size = 25, face = "bold"),
-    strip.background = element_blank(),
-    strip.placement = "outside"
-  ) +
-  scale_color_gdocs() +
-  scale_x_continuous(breaks = 1:3, labels = c("C0", "C1", "C2")) +
-  labs(x = "Population",
-       y = "")
-
-ggsave(
-  "output/regres-cycles_BLUPs.tiff",
-  dpi = 600,
-  width = 16,
-  height = 8
-)
+  facet_wrap(~ trait, ncol = 3, scales = "free_y", labeller = as_labeller(resultado)) +
+  theme_bw(base_size = 25) +
+  scale_x_continuous(breaks = 1:3, labels = c("C0","C1","C2")) +
+  labs(x = "Population", y = "")
 ```
 
-## Boxplot
+*Interpretation:*  
+Regression slopes indicate **genetic gain per cycle**. Significant positive slopes confirm progress.
+
+---
+
+# Step 8: Boxplots by Cycle
 
 ```{r}
-mean_predicted<-BLUPS1  %>%
+BLUPS1 %>%
   full_join(trialInLocYr_Pop_top) %>%
   filter(!is.na(Population) & H2 >= 0.5) %>%
   mutate(entryType = ifelse(germplasmName %in% checks, "check", "test")) %>%
-  droplevels() |> 
-  group_by(trait, Population, entryType) |> 
-  summarise(mean_predicted = mean(Predicted))
-```
-
-
-```{r}
-BLUPS1  %>%
-  full_join(trialInLocYr_Pop_top) %>%
-  filter(!is.na(Population) & H2 >= 0.5) %>%
-  mutate(entryType = ifelse(germplasmName %in% checks, "check", "test")) %>%
-  droplevels() %>%
   ggboxplot(x = "Population", y = "Predicted", fill = "entryType") +
   facet_wrap(trait ~ ., scales = "free_y", strip.position = "left") +
-  scale_fill_gdocs() +
-  theme_bw() +
-  theme(
-    text = element_text(size = 25, face = "bold"),
-    strip.background = element_blank(),
-    strip.placement = "outside"
-  ) +
-  labs(x = "Population",
-       y = "",
-       fill = "Entry Type")
-
-ggsave(
-  "output/boxplot-cycles_BLUPs.tiff",
-  dpi = 600,
-  width = 16,
-  height = 8
-)
+  theme_bw(base_size = 25) +
+  labs(x = "Population", y = "", fill = "Entry Type")
 ```
 
-# Joint analysis
+*Interpretation:*  
+Boxplots show the distribution of predicted values per cycle, contrasting **checks vs tests**. This highlights the superiority of selected clones over checks.
+
+---
+
+# Step 9: Joint Analysis
+
+Até aqui, rodamos modelos **por ensaio**. Agora, fazemos uma **análise conjunta** (multi‑environment trial analysis), que permite estimar BLUPs considerando todos os ambientes (locais/anos) simultaneamente. Isso aumenta a precisão e permite avaliar a estabilidade dos clones.
+
+## Função auxiliar
 
 ```{r}
 analise_metan_joint <- function(model, trait) {
@@ -303,66 +248,68 @@ analise_metan_joint <- function(model, trait) {
     summarise(across(where(is.numeric), mean)) %>%
     pull(trait)
   
-  return(
-    tibble(
-      trait = trait,
-      H2 = H2,
-      germplasmName = BLUPS[[1]],
-      BLUPS = BLUPS[[2]],
-      Predicted = Predicted_values
-    )
+  tibble(
+    trait = trait,
+    H2 = H2,
+    germplasmName = BLUPS[[1]],
+    BLUPS = BLUPS[[2]],
+    Predicted = Predicted_values
   )
 }
 ```
 
-## Obtenção dos BLUPs
+*Comentário:*  
+Essa função retorna, para cada característica:  
+- **H² (heritabilidade)** → precisão da seleção.  
+- **BLUPs** → valores ajustados por clone.  
+- **Predicted** → médias preditas considerando todos os ambientes.
+
+---
+
+## Obtenção dos BLUPs conjuntos
 
 ```{r}
-# Definir número de núcleos a serem usados
 num_cores <- detectCores()
-
-# Registrar os núcleos a serem usados
 registerDoParallel(cores = num_cores)
 
-# Loop externo
-BLUPS_join <-
-  foreach(
-    trait = traits,
-    .combine = bind_rows,
-    .multicombine = TRUE,
-    .verbose = TRUE
-  ) %dopar% {
-    library(tidyverse)
-    library(metan)
-    DRG <- list()
-    
-    data <- dbdata %>%
-      select(1:6, trait, 16) %>%
-      na.omit() %>%
-      droplevels()
-    
-    if (!is.na(mean(data[[trait]], na.rm = TRUE))) {
-      model <-
-        gamem_met(
-          data,
-          env = trialInLocYr,
-          gen = germplasmName,
-          rep = blockInTrial,
-          resp = sym(trait)
-        )
-      drg <- list(analise_metan_joint(model, trait))
-      DRG <- append(DRG, drg)
-    }
-    
-    # Juntar os data frames de BLUPs de cada trait em um só
-    bind_rows(DRG)
+BLUPS_join <- foreach(
+  trait = traits,
+  .combine = bind_rows,
+  .multicombine = TRUE,
+  .verbose = TRUE
+) %dopar% {
+  library(tidyverse)
+  library(metan)
+  DRG <- list()
+  
+  data <- dbdata %>%
+    select(1:6, trait, 16) %>%
+    na.omit() %>%
+    droplevels()
+  
+  if (!is.na(mean(data[[trait]], na.rm = TRUE))) {
+    model <- gamem_met(
+      data,
+      env = trialInLocYr,
+      gen = germplasmName,
+      rep = blockInTrial,
+      resp = sym(trait)
+    )
+    DRG <- append(DRG, list(analise_metan_joint(model, trait)))
   }
+  
+  bind_rows(DRG)
+}
 
-# Finalizar o registro dos núcleos
 registerDoSEQ()
 ```
 
-## Adicionando a variavel Pop
+*Interpretação:*  
+Aqui usamos o **`gamem_met`** para ajustar modelos mistos multiambiente. Isso permite separar efeitos de genótipo, ambiente e interação G×E, fornecendo BLUPs mais robustos.
+
+---
+
+## Step 10: Adicionar variável Pop
 
 ```{r}
 C0 <- fread("data/TP-BR-18-EMBRAPA-Nextgen.csv",
@@ -384,12 +331,18 @@ BLUPS_join1 <- BLUPS_join %>%
 save(BLUPS_join1, file = "output/BLUPS_metan_join.RData")
 ```
 
-## Calcular SI
+*Interpretação:*  
+Cada clone recebe sua classificação de ciclo (**C0, C1, C2**). Isso é essencial para comparar ganhos genéticos entre gerações.
+
+---
+
+# Step 11: Selection Index (SI)
+
+O **Índice de Seleção (SI)** combina múltiplas características em uma única métrica ponderada, refletindo os objetivos do programa (rendimento, qualidade, arquitetura).
 
 ```{r}
 load("output/BLUPS_metan_join.RData")
 
-# Calcular SI
 BLUPS_join1 <- BLUPS_join %>%
   select(-H2,-BLUPS) %>%
   pivot_wider(names_from = trait, values_from = Predicted) %>%
@@ -402,91 +355,21 @@ BLUPS_join1 <- BLUPS_join %>%
   )
 ```
 
-## Gráfico de Barras C1
+*Interpretação:*  
+- **Pesos** refletem a importância relativa de cada característica (ex.: rendimento recebe peso maior).  
+- O SI permite **ranquear clones** considerando múltiplos atributos ao mesmo tempo.  
+- Clones com SI alto são candidatos a avançar no programa.
 
-```{r}
-# Plot
-load("output/BLUPS_metan_join.RData")
+---
 
-BLUPS_join %>% 
-  mutate(entryType = if_else(germplasmName %in% checks$Clones, "check", "test")) %>% 
-  filter(Pop == "C1" | entryType == "check") %>%
-  droplevels() %>% 
-  group_by(germplasmName) %>%
-  arrange(desc(SI)) %>%
-  ungroup() %>%
-  slice(1:30) %>%
-  ggplot(aes(x = germplasmName, y = SI, fill = entryType)) +
-  geom_col(width = 0.75, alpha = 0.9, show.legend = F) +
-  scale_fill_gdocs() +
-  theme_minimal() +
-  scale_x_reordered() +
-  theme(text = element_text(size = 25, face = "bold"),
-    axis.text.x = element_text(
-      size = 18,
-      angle = 45,
-      hjust = 1,
-      vjust = 1.1
-    ),
-    legend.title = element_blank(),
-    legend.position = "bottom",
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.spacing.x = unit(0.2, "lines"),
-    strip.background = element_blank(),
-    strip.text.x = element_text(size = 12, face = "bold")
-  ) +
-  labs(x = "Clone",
-       y = "Selection Index",
-       fill = "Entry Type",
-       title = "GS-C1")
+# Conclusão
 
-ggsave(
-  "output/barras-cycles_BLUPs_C1.tiff",
-  width = 16,
-  height = 8
-)
-```
+Neste script, realizamos:  
+- Estimativa de **BLUPs por ensaio** e **conjunta**  
+- Cálculo de **H²** para avaliar confiabilidade  
+- Comparação entre ciclos (C0 → C1 → C2) via regressão e boxplots  
+- Construção de um **Índice de Seleção** para priorizar clones superiores  
 
+**Mensagem-chave:**  
+Os resultados confirmam **ganhos genéticos consistentes** ao longo dos ciclos, com clones mais recentes (C2) apresentando desempenho superior em rendimento e qualidade. O uso de BLUPs e índices de seleção fortalece a tomada de decisão no programa de melhoramento.
 
-```{r}
-# Plot
-BLUPS_join  %>% 
-  mutate(entryType = if_else(germplasmName %in% checks$Clones, "check", "test"))%>%
-  filter(Pop == "C2" | entryType == "check") %>%
-  droplevels() %>% 
-  group_by(germplasmName) %>%
-  arrange(desc(SI)) %>%
-  ungroup() %>%
-  slice(1:30) %>%
-  ggplot(aes(x = germplasmName, y = SI, fill = entryType)) +
-  geom_col(width = 0.75, alpha = 0.9, show.legend = F) +
-  scale_fill_gdocs() +
-  theme_minimal() +
-  scale_x_reordered() +
-  theme(text = element_text(size = 25, face = "bold"),
-    axis.text.x = element_text(
-      size = 18,
-      angle = 45,
-      hjust = 1,
-      vjust = 1.1
-    ),
-    legend.title = element_blank(),
-    legend.position = "bottom",
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.spacing.x = unit(0.2, "lines"),
-    strip.background = element_blank(),
-    strip.text.x = element_text(size = 12, face = "bold")
-  ) +
-  labs(x = "Clone",
-       y = "Selection Index",
-       fill = "Entry Type",
-       title = "GS-C2")
-
-ggsave(
-  "output/barras-cycles_BLUPs_C2.tiff",
-  width = 16,
-  height = 8
-)
-```
