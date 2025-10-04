@@ -1,14 +1,31 @@
 name: "analisys-next-gen-2022"
 output_dir: ../docs
+lang: "en"
+
 navbar:
-  title: "analisys-next-gen-2022"
+  title: "Cassava Breeding – NextGen 2022"
   left:
-  - text: Home
-    href: index.html
-  - text: About
-    href: about.html
-  - text: License
-    href: license.html
+    - text: Home
+      href: index.html
+    - text: Trials & Traits
+      href: 1_Trials-and-traits-2023.html
+    - text: Phenotype Data
+      href: 2_Phenotype_data.html
+    - text: BLUPs Cycles
+      href: 3_Blups_cycles.html
+    - text: About
+      href: about.html
+    - text: License
+      href: license.html
+    - text: Embrapa
+      href: https://www.embrapa.br/mandioca-e-fruticultura
+    - text: NextGen Cassava
+      href: https://www.nextgencassava.org/
+  right:
+    - icon: fa-github
+      text: Source code
+      href: https://github.com/WevertonGomesCosta/analisys-next-gen-2022
+
 output:
   workflowr::wflow_html:
     toc: yes
