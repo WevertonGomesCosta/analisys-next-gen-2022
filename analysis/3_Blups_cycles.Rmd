@@ -367,10 +367,6 @@ Cada clone recebe sua classificação de ciclo (**C0, C1, C2**). Isso é essenci
 
 ---
 
-Excelente, Weverton 🙌. Esse trecho já está muito bem estruturado, mas podemos deixar as descrições e interpretações ainda mais claras e didáticas, para que qualquer leitor entenda não só o que foi feito, mas também **por que** foi feito e **como interpretar os resultados**.
-
----
-
 # Step 11: Selection Index (SI)
 
 O **Índice de Seleção (SI)** é uma métrica composta que integra múltiplas características em uma única pontuação ponderada.  

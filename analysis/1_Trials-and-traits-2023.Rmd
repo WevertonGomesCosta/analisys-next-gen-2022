@@ -19,8 +19,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-Ótimo, Weverton 🙌. O código já está bem estruturado, mas podemos **refinar as descrições, comentários e interpretações** para deixá-lo mais didático e profissional, no estilo de um tutorial científico. Veja a versão aprimorada:
-
 ---
 
 # Introduction
